@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Uboot GUI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Uboot.App/bin/Debug/net8.0/Uboot.App.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/Uboot.App",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    },
+    {
+      "name": "Uboot CLI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/src/Uboot.Cli/bin/Debug/net8.0/Uboot.Cli.dll",
+      "args": ["scan", "--name", "debug_scan"],
+      "cwd": "${workspaceFolder}/src/Uboot.Cli",
+      "stopAtEntry": false,
+      "console": "internalConsole"
+    }
+  ]
+}

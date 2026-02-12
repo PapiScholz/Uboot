@@ -46,6 +46,12 @@ set(SOURCES
     collectors/WmiPersistenceCollector.cpp
     collectors/WinlogonCollector.cpp
     collectors/IfeoDebuggerCollector.cpp
+    evidence/file_probe.cpp
+    evidence/hashing.cpp
+    evidence/version_info.cpp
+    evidence/authenticode.cpp
+    evidence/misconfig_checks.cpp
+    evidence/entry_evidence.cpp
 )
 
 # Header files (for IDE visibility)
@@ -66,6 +72,12 @@ set(HEADERS
     json/JsonWriter.h
     normalize/CommandNormalizer.h
     resolve/LnkResolver.h
+    evidence/file_probe.h
+    evidence/hashing.h
+    evidence/version_info.h
+    evidence/authenticode.h
+    evidence/misconfig_checks.h
+    evidence/entry_evidence.h
 )
 
 # Create executable
@@ -81,6 +93,10 @@ target_include_directories(uboot-collector PRIVATE
 target_link_libraries(uboot-collector PRIVATE
     advapi32    # Registry access
     shell32     # Shell functions
+    bcrypt      # Cryptography (hashing)
+    wintrust    # Authenticode verification
+    crypt32     # Certificate APIs
+    version     # Version info extraction
     ole32       # COM support
     oleaut32    # COM automation
     taskschd    # Task Scheduler

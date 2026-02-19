@@ -35,10 +35,81 @@ namespace {
         }
     };
     using FileHandlePtr = std::unique_ptr<std::remove_pointer_t<HANDLE>, FileHandleDeleter>;
+
+    // Helper class to manage a single hash algorithm context
+    class HashContext {
+    public:
+        NTSTATUS Initialize(LPCWSTR algId) {
+            BCRYPT_ALG_HANDLE hAlgRaw = nullptr;
+            NTSTATUS status = BCryptOpenAlgorithmProvider(
+                &hAlgRaw,
+                algId,
+                nullptr,
+                0
+            );
+            if (status < 0) return status;
+            hAlg.reset(hAlgRaw);
+
+            DWORD hashObjectSize = 0;
+            DWORD resultSize = 0;
+            status = BCryptGetProperty(
+                hAlg.get(),
+                BCRYPT_OBJECT_LENGTH,
+                reinterpret_cast<PBYTE>(&hashObjectSize),
+                sizeof(DWORD),
+                &resultSize,
+                0
+            );
+            if (status < 0) return status;
+
+            hashObject.resize(hashObjectSize);
+
+            BCRYPT_HASH_HANDLE hHashRaw = nullptr;
+            status = BCryptCreateHash(
+                hAlg.get(),
+                &hHashRaw,
+                hashObject.data(),
+                hashObjectSize,
+                nullptr,
+                0,
+                0
+            );
+            if (status < 0) return status;
+            hHash.reset(hHashRaw);
+
+            return 0; // STATUS_SUCCESS
+        }
+
+        NTSTATUS Update(const uint8_t* buffer, DWORD size) {
+            return BCryptHashData(hHash.get(), const_cast<PUCHAR>(buffer), size, 0);
+        }
+
+        NTSTATUS Finish(std::vector<uint8_t>& output) {
+            DWORD hashSize = 0;
+            DWORD resultSize = 0;
+            NTSTATUS status = BCryptGetProperty(
+                hAlg.get(),
+                BCRYPT_HASH_LENGTH,
+                reinterpret_cast<PBYTE>(&hashSize),
+                sizeof(DWORD),
+                &resultSize,
+                0
+            );
+            if (status < 0) return status;
+
+            output.resize(hashSize);
+            return BCryptFinishHash(hHash.get(), output.data(), hashSize, 0);
+        }
+
+    private:
+        AlgHandlePtr hAlg;
+        HashHandlePtr hHash;
+        std::vector<uint8_t> hashObject;
+    };
 }
 
-HashResult Hashing::ComputeSHA256(const std::wstring& filePath) noexcept {
-    HashResult result;
+HashEvidence Hashing::ComputeHashes(const std::wstring& filePath) noexcept {
+    HashEvidence result;
     
     // Open file for reading
     FileHandlePtr hFile(CreateFileW(
@@ -55,117 +126,49 @@ HashResult Hashing::ComputeSHA256(const std::wstring& filePath) noexcept {
         result.win32Error = GetLastError();
         return result;
     }
-    
-    // Open algorithm provider
-    BCRYPT_ALG_HANDLE hAlgRaw = nullptr;
-    NTSTATUS status = BCryptOpenAlgorithmProvider(
-        &hAlgRaw,
-        BCRYPT_SHA256_ALGORITHM,
-        nullptr,
-        0
-    );
-    AlgHandlePtr hAlg(hAlgRaw);
-    
-    if (status < 0) {
-        result.ntStatus = status;
-        return result;
-    }
-    
-    // Get hash object size
-    DWORD hashObjectSize = 0;
-    DWORD resultSize = 0;
-    status = BCryptGetProperty(
-        hAlg.get(),
-        BCRYPT_OBJECT_LENGTH,
-        reinterpret_cast<PBYTE>(&hashObjectSize),
-        sizeof(DWORD),
-        &resultSize,
-        0
-    );
-    
-    if (status < 0) {
-        result.ntStatus = status;
-        return result;
-    }
-    
-    // Get hash size (should be 32 for SHA-256)
-    DWORD hashSize = 0;
-    status = BCryptGetProperty(
-        hAlg.get(),
-        BCRYPT_HASH_LENGTH,
-        reinterpret_cast<PBYTE>(&hashSize),
-        sizeof(DWORD),
-        &resultSize,
-        0
-    );
-    
-    if (status < 0 || hashSize != 32) {
-        result.ntStatus = status;
-        return result;
-    }
-    
-    // Allocate hash object
-    std::vector<uint8_t> hashObject(hashObjectSize);
-    
-    // Create hash
-    BCRYPT_HASH_HANDLE hHashRaw = nullptr;
-    status = BCryptCreateHash(
-        hAlg.get(),
-        &hHashRaw,
-        hashObject.data(),
-        hashObjectSize,
-        nullptr,
-        0,
-        0
-    );
-    HashHandlePtr hHash(hHashRaw);
-    
-    if (status < 0) {
-        result.ntStatus = status;
-        return result;
-    }
-    
-    // Read file and hash in chunks
+
+    HashContext ctxMd5, ctxSha1, ctxSha256;
+    NTSTATUS status;
+
+    if ((status = ctxMd5.Initialize(BCRYPT_MD5_ALGORITHM)) < 0) { result.ntStatus = status; return result; }
+    if ((status = ctxSha1.Initialize(BCRYPT_SHA1_ALGORITHM)) < 0) { result.ntStatus = status; return result; }
+    if ((status = ctxSha256.Initialize(BCRYPT_SHA256_ALGORITHM)) < 0) { result.ntStatus = status; return result; }
+
+    // Read file and update all hashes
     std::vector<uint8_t> buffer(BUFFER_SIZE);
     DWORD bytesRead = 0;
     
     while (ReadFile(hFile.get(), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesRead, nullptr) && bytesRead > 0) {
-        status = BCryptHashData(
-            hHash.get(),
-            buffer.data(),
-            bytesRead,
-            0
-        );
-        
-        if (status < 0) {
-            result.ntStatus = status;
-            return result;
-        }
+        if ((status = ctxMd5.Update(buffer.data(), bytesRead)) < 0) { result.ntStatus = status; return result; }
+        if ((status = ctxSha1.Update(buffer.data(), bytesRead)) < 0) { result.ntStatus = status; return result; }
+        if ((status = ctxSha256.Update(buffer.data(), bytesRead)) < 0) { result.ntStatus = status; return result; }
     }
-    
-    // Finalize hash
-    SHA256Hash hash;
-    status = BCryptFinishHash(
-        hHash.get(),
-        hash.data(),
-        static_cast<ULONG>(hash.size()),
-        0
-    );
-    
-    if (status < 0) {
-        result.ntStatus = status;
-        return result;
-    }
-    
-    result.sha256 = hash;
+
+    // Finalize hashes
+    std::vector<uint8_t> md5Bytes, sha1Bytes, sha256Bytes;
+
+    if ((status = ctxMd5.Finish(md5Bytes)) < 0) { result.ntStatus = status; return result; }
+    if ((status = ctxSha1.Finish(sha1Bytes)) < 0) { result.ntStatus = status; return result; }
+    if ((status = ctxSha256.Finish(sha256Bytes)) < 0) { result.ntStatus = status; return result; }
+
+    // Copy to result structs
+    result.md5.emplace();
+    std::copy(md5Bytes.begin(), md5Bytes.end(), result.md5->begin());
+
+    result.sha1.emplace();
+    std::copy(sha1Bytes.begin(), sha1Bytes.end(), result.sha1->begin());
+
+    result.sha256.emplace();
+    std::copy(sha256Bytes.begin(), sha256Bytes.end(), result.sha256->begin());
+
     return result;
 }
 
-std::string Hashing::HashToHexString(const SHA256Hash& hash) noexcept {
+std::string Hashing::ToHex(const std::vector<uint8_t>& bytes) noexcept {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');
     
-    for (uint8_t byte : hash) {
+    for (uint8_t byte : bytes) {
         oss << std::setw(2) << static_cast<int>(byte);
     }
     

@@ -36,7 +36,7 @@ if (-not (Test-Path $buildDir)) {
 Write-Host "Configuring project with CMake..." -ForegroundColor Yellow
 Push-Location $buildDir
 try {
-    cmake .. -G "Visual Studio 17 2022" -A x64
+    cmake .. 
     if ($LASTEXITCODE -ne 0) {
         throw "CMake configuration failed"
     }

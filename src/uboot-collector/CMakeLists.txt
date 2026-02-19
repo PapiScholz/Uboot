@@ -30,9 +30,8 @@ else()
     set(RAPIDJSON_INCLUDE_DIRS ${RapidJSON_INCLUDE_DIRS})
 endif()
 
-# Source files
+# Source files (excluding main.cpp for reusability)
 set(SOURCES
-    main.cpp
     util/CliArgs.cpp
     util/CommandResolver.cpp
     runner/CollectorRunner.cpp
@@ -52,6 +51,8 @@ set(SOURCES
     evidence/authenticode.cpp
     evidence/misconfig_checks.cpp
     evidence/entry_evidence.cpp
+    scoring/RulesLoader.cpp
+    scoring/ScoringEngine.cpp
 )
 
 # Header files (for IDE visibility)
@@ -78,61 +79,76 @@ set(HEADERS
     evidence/authenticode.h
     evidence/misconfig_checks.h
     evidence/entry_evidence.h
+    scoring/Types.h
+    scoring/RulesLoader.h
+    scoring/ScoringEngine.h
+    scoring/ThresholdClassifier.h
+    scoring/IScoringStrategy.h
+    scoring/ISignalEvaluator.h
+    scoring/SignalRegistry.h
+    scoring/FutureStubs.h
+    scoring/strategies/WeightedSumStrategy.h
+    scoring/evaluators/UnsignedBinaryEvaluator.h
+    scoring/evaluators/InvalidSignatureEvaluator.h
+    scoring/evaluators/MissingTargetEvaluator.h
+    scoring/evaluators/UserWritableEvaluator.h
+    scoring/evaluators/LolbinEvaluator.h
+    scoring/evaluators/ObfuscatedCommandEvaluator.h
+    scoring/evaluators/RelativePathEvaluator.h
+    scoring/evaluators/System32LegitEvaluator.h
 )
 
-# Create executable
-add_executable(uboot-collector ${SOURCES} ${HEADERS})
+# ... (Headers kept as is) ...
 
-# Include directories
-target_include_directories(uboot-collector PRIVATE
+# Create main executable
+add_executable(uboot-collector main.cpp ${SOURCES} ${HEADERS})
+
+# ... (Include directories and Link libraries for uboot-collector kept as is) ...
+
+# Test executable
+add_executable(test_scoring tests/test_scoring.cpp ${SOURCES} ${HEADERS})
+
+target_include_directories(test_scoring PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${RAPIDJSON_INCLUDE_DIRS}
 )
 
-# Windows-specific libraries
-target_link_libraries(uboot-collector PRIVATE
-    advapi32    # Registry access
-    shell32     # Shell functions
-    bcrypt      # Cryptography (hashing)
-    wintrust    # Authenticode verification
-    crypt32     # Certificate APIs
-    version     # Version info extraction
-    ole32       # COM support
-    oleaut32    # COM automation
-    taskschd    # Task Scheduler
-    wbemuuid    # WMI
-    shlwapi     # Shell lightweight APIs
-    pathcch     # Path handling (Windows 8+)
+# Phase 3 Verification Test
+add_executable(test_phase3 tests/test_phase3.cpp ${SOURCES} ${HEADERS})
+
+target_include_directories(test_phase3 PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${RAPIDJSON_INCLUDE_DIRS}
 )
 
-# Compiler options for MSVC
-if(MSVC)
-    target_compile_options(uboot-collector PRIVATE
-        /W4                 # Warning level 4
-        /WX-                # Do not treat warnings as errors (for now)
-        /permissive-        # Conformance mode
-        /Zc:__cplusplus     # Enable correct __cplusplus macro
-        /EHsc               # Exception handling model
-        /MP                 # Multi-processor compilation
-        /utf-8              # UTF-8 source and execution charset
-    )
-    
-    # Add debugging information for Debug builds
-    target_compile_options(uboot-collector PRIVATE
-        $<$<CONFIG:Debug>:/Zi /Od>
-        $<$<CONFIG:Release>:/O2>
-    )
-    
-    # Set subsystem to console
-    set_target_properties(uboot-collector PROPERTIES
-        LINK_FLAGS "/SUBSYSTEM:CONSOLE"
-    )
-endif()
+target_link_libraries(test_phase3 PRIVATE
+    advapi32
+    shell32
+    bcrypt
+    wintrust
+    crypt32
+    version
+    ole32
+    oleaut32
+    taskschd
+    wbemuuid
+    shlwapi
+    pathcch
+)
 
-# Set output name
-set_target_properties(uboot-collector PROPERTIES
-    OUTPUT_NAME "uboot-collector"
-    DEBUG_POSTFIX "_debug"
+target_link_libraries(test_scoring PRIVATE
+    advapi32
+    shell32
+    bcrypt
+    wintrust
+    crypt32
+    version
+    ole32
+    oleaut32
+    taskschd
+    wbemuuid
+    shlwapi
+    pathcch
 )
 
 # Installation rules (optional)

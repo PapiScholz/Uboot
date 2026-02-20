@@ -1,0 +1,46 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/rapidjson-populate"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/d555c6752164653b501be5cbf1d81e02/rapidjson-populate.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/c1585359c102e2b2ab6403b44890bd75/rapidjson-populate-complete.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-build.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-configure.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-download.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-install.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-mkdir.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-patch.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-test.rule"
+		},
+		{
+			"file" : "C:/Users/Ezequiel/Documents/GitHub/Uboot/build/_deps/rapidjson-subbuild/CMakeFiles/a66fec70fab033abe8d551b2b492a254/rapidjson-populate-update.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"rapidjson-populate"
+		],
+		"name" : "rapidjson-populate"
+	}
+}

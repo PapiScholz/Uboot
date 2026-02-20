@@ -1,8 +1,0 @@
-Versión de MSBuild 18.3.0-release-26070-10+3972042b7 para .NET Framework
-
-  CommandNormalizer.cpp
-C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(216,8): error C3861: 'PathIsAbsoluteW': no se encontró el identificador [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
-C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(295,16): warning C4834: Descartar el valor de retorno de la función con el atributo [[nodiscard]] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
-  CommandNormalizer.cpp
-C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(216,8): error C3861: 'PathIsAbsoluteW': no se encontró el identificador [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
-C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(295,16): warning C4834: Descartar el valor de retorno de la función con el atributo [[nodiscard]] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]

@@ -1,0 +1,5 @@
+#include "resource.h"
+#include <winres.h>
+
+// IDI_UBOOT_ICON ICON "uboot.ico"
+// We don't have an icon yet, so we won't reference a file to avoid build errors.

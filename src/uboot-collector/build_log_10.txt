@@ -1,0 +1,7 @@
+Versión de MSBuild 18.3.0-release-26070-10+3972042b7 para .NET Framework
+
+  CommandNormalizer.cpp
+  test_ops.vcxproj -> C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\bin\Release\test_ops.exe
+  CommandNormalizer.cpp
+  uboot-collector.vcxproj -> C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\bin\Release\uboot-collector.exe
+  Building Custom Rule C:/Users/Ezequiel/Documents/GitHub/Uboot/src/uboot-collector/CMakeLists.txt

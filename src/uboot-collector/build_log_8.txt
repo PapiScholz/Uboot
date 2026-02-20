@@ -1,0 +1,89 @@
+CMake is re-running because C:/Users/Ezequiel/Documents/GitHub/Uboot/src/uboot-collector/build/CMakeFiles/generate.stamp is out-of-date.
+  the file 'C:/Users/Ezequiel/Documents/GitHub/Uboot/src/uboot-collector/CMakeLists.txt'
+  is newer than 'C:/Users/Ezequiel/Documents/GitHub/Uboot/src/uboot-collector/build/CMakeFiles/generate.stamp.depend'
+  result='-1'
+CMake Warning (dev) at C:/Program Files/CMake/share/cmake-4.2/Modules/FetchContent.cmake:1963 (message):
+  Calling FetchContent_Populate(rapidjson) is deprecated, call
+  FetchContent_MakeAvailable(rapidjson) instead.  Policy CMP0169 can be set
+  to OLD to allow FetchContent_Populate(rapidjson) to be called directly for
+  now, but the ability to call it with declared details will be removed
+  completely in a future version.
+Call Stack (most recent call first):
+  CMakeLists.txt:29 (FetchContent_Populate)
+This warning is for project developers.  Use -Wno-dev to suppress it.
+
+-- Configuring done (2.9s)
+-- Generating done (0.1s)
+-- Build files have been written to: C:/Users/Ezequiel/Documents/GitHub/Uboot/src/uboot-collector/build
+Versión de MSBuild 18.3.0-release-26070-10+3972042b7 para .NET Framework
+
+  CommandNormalizer.cpp
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(54,41): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(61,52): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(207,10): error C3861: 'PathIsAbsoluteW': no se encontró el identificador [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(254,58): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(265,58): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(284,22): warning C4834: Descartar el valor de retorno de la función con el atributo [[nodiscard]] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(295,53): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(310,53): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(315,56): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(380,66): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+  CommandNormalizer.cpp
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(54,41): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(61,52): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(207,10): error C3861: 'PathIsAbsoluteW': no se encontró el identificador [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(254,58): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(265,58): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(284,22): warning C4834: Descartar el valor de retorno de la función con el atributo [[nodiscard]] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(295,53): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(310,53): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(315,56): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\normalize\CommandNormalizer.cpp(380,66): error C2039: "iswspace": no es un miembro de "std" [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\VC\Tools\MSVC\14.50.35717\include\sstream(19,1):
+      vea la declaración de 'std'
+  

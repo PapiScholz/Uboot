@@ -1,0 +1,164 @@
+Versión de MSBuild 18.3.0-release-26070-10+3972042b7 para .NET Framework
+
+  CollectorRunner.cpp
+  StartupFolderCollector.cpp
+  ScheduledTasksCollector.cpp
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,52): error C2664: 'uboot::LnkResolutionResult uboot::LnkResolver::Resolve(const std::string &)': el argumento 1 no puede convertirse de 'std::wstring' a 'const std::string &' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,60):
+      Razón: no se puede realizar la conversión de 'std::wstring' a 'const std::string'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,60):
+      No hay disponible ningún operador de conversión definido por el usuario que pueda realizar esta conversión, o bien no se puede llamar al operador
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\resolve\LnkResolver.h(37,32):
+      vea la declaración de 'uboot::LnkResolver::Resolve'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,52):
+      al hacer coincidir la lista de argumentos '(std::wstring)'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,69):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, nullptr, int, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,65):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, char *, unsigned __int64, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(145,74):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, nullptr, int, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\test_ops.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,64):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, char *, unsigned __int64, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+  WmiPersistenceCollector.cpp
+  WinlogonCollector.cpp
+  IfeoDebuggerCollector.cpp
+  Generando código...
+  CollectorRunner.cpp
+  StartupFolderCollector.cpp
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,52): error C2664: 'uboot::LnkResolutionResult uboot::LnkResolver::Resolve(const std::string &)': el argumento 1 no puede convertirse de 'std::wstring' a 'const std::string &' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,60):
+      Razón: no se puede realizar la conversión de 'std::wstring' a 'const std::string'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,60):
+      No hay disponible ningún operador de conversión definido por el usuario que pueda realizar esta conversión, o bien no se puede llamar al operador
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\resolve\LnkResolver.h(37,32):
+      vea la declaración de 'uboot::LnkResolver::Resolve'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(132,52):
+      al hacer coincidir la lista de argumentos '(std::wstring)'
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,69):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(136,11):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, nullptr, int, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,65):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(140,7):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, char *, unsigned __int64, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(145,74):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(144,29):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, nullptr, int, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664: 'int WideCharToMultiByte(UINT,DWORD,LPCWCH,int,LPSTR,int,LPCCH,LPBOOL)': el argumento 3 no puede convertirse de 'const _Elem *' a 'LPCWCH' [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:         with [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:         [ [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:             _Elem=char [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7): error C2664:         ] [C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\build\uboot-collector.vcxproj]
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,64):
+      Los tipos señalados no están relacionados; la conversión requiere reinterpret_cast, conversión de estilo de C o conversión de estilo de función entre paréntesis
+      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\stringapiset.h(137,1):
+      vea la declaración de 'WideCharToMultiByte'
+      C:\Users\Ezequiel\Documents\GitHub\Uboot\src\uboot-collector\collectors\StartupFolderCollector.cpp(149,7):
+      al hacer coincidir la lista de argumentos '(int, int, const _Elem *, int, char *, unsigned __int64, nullptr, nullptr)'
+          with
+          [
+              _Elem=char
+          ]
+  
+  ScheduledTasksCollector.cpp
+  WmiPersistenceCollector.cpp
+  WinlogonCollector.cpp
+  IfeoDebuggerCollector.cpp
+  Generando código...

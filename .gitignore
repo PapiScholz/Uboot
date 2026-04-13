@@ -59,3 +59,5 @@ elevated_smoke_result.json
 !.vscode/extensions.json
 .DS_Store
 Thumbs.db
+
+.fake

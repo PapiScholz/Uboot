@@ -361,6 +361,8 @@ class LlmInstaller:
 class LlmAdvisor:
     """Run structured remediation advisory through a local llama.cpp runtime."""
 
+    ADVISOR_OUTPUT_VERSION = "2026-04-13-quality-1"
+
     PROFILES: Dict[LlmMode, LlmProfile] = {
         LlmMode.FAST: LlmProfile(
             display_name="Fast",
@@ -418,6 +420,31 @@ class LlmAdvisor:
     def ensure_component(self, mode: LlmMode, progress: ProgressCallback = None) -> LlmInstallResult:
         """Download and install the local runtime and model for the selected mode."""
         return self.installer.ensure_component(mode, progress)
+
+    def cache_fingerprint(
+        self,
+        entry: Entry,
+        scored_entry: ScoredEntry,
+        evidence: Optional[EntryEvidence],
+        mode: LlmMode,
+    ) -> str:
+        """Return a stable cache fingerprint for a specific payload + mode."""
+        payload = self.build_payload(entry, scored_entry, evidence)
+        cache_payload = {
+            "advisor_version": self.ADVISOR_OUTPUT_VERSION,
+            "mode": mode.value,
+            "model": self.get_profile(mode).model_filename,
+            "payload": payload,
+        }
+        digest = hashlib.sha256(
+            json.dumps(
+                cache_payload,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ).encode("utf-8")
+        ).hexdigest()
+        return digest[:16]
 
     def component_status(self, mode: LlmMode) -> Dict[str, Any]:
         """Return component availability and guidance for a mode."""
@@ -549,7 +576,7 @@ class LlmAdvisor:
         )
         data = self._extract_json(response)
         advice = self.validate_response(data)
-        advice.evidence = self._normalize_evidence_items(payload, advice.evidence)
+        self._stabilize_advice(payload, advice)
         self._enforce_policy(payload, advice)
         return advice
 
@@ -632,6 +659,53 @@ class LlmAdvisor:
         banned_evidence = {"hashes", "sha256", "signature_status", "metadata", "signals", "rule_matches"}
         if any(item.strip().lower() in banned_evidence for item in advice.evidence):
             raise AdviceValidationError("Evidence items must be concrete observations, not payload field names")
+
+    def _stabilize_advice(self, payload: Dict[str, Any], advice: LlmAdvice) -> None:
+        """Normalize small-model output into concrete, auditable UI text."""
+        self._coerce_low_signal_recommendation(payload, advice)
+        canonical_evidence = self._canonical_evidence_items(payload)
+        advice.evidence = canonical_evidence[:3] or self._normalize_evidence_items(payload, advice.evidence)
+        advice.summary = self._compose_summary(payload, advice)
+        advice.justification = self._compose_justification(payload, advice)
+        advice.raw_response = {
+            **advice.raw_response,
+            "_normalized_by": self.ADVISOR_OUTPUT_VERSION,
+        }
+
+    @staticmethod
+    def _coerce_low_signal_recommendation(payload: Dict[str, Any], advice: LlmAdvice) -> None:
+        """Dampen overconfident recommendations for weak heuristic cases."""
+        signals = {
+            str(item).strip().lower()
+            for item in [*payload.get("signals", []), *payload.get("rule_matches", [])]
+            if str(item).strip()
+        }
+        strong_indicators = {
+            "unsigned_binary",
+            "invalid_signature",
+            "missing_target",
+            "obfuscated_command",
+            "relative_path",
+        }
+        score = int(payload.get("score", 0))
+        weak_case = (
+            score < 50
+            and len(payload.get("rule_matches", [])) <= 1
+            and not any(signal in strong_indicators for signal in signals)
+        )
+        if not weak_case:
+            return
+
+        if advice.assessment == "malicious":
+            advice.assessment = "suspicious"
+        if advice.confidence == "high":
+            advice.confidence = "medium"
+        if advice.false_positive_risk == "low":
+            advice.false_positive_risk = "medium"
+        if advice.recommended_action in {"disable", "delete", "quarantine_candidate"}:
+            advice.recommended_action = "review_manually"
+        if advice.secondary_action in {None, "disable", "delete", "quarantine_candidate"}:
+            advice.secondary_action = "open_location"
 
     def _resolve_cli_path(self) -> Optional[Path]:
         override = os.environ.get("UBOOT_LLAMACPP_CLI", "").strip()
@@ -727,6 +801,171 @@ class LlmAdvisor:
                 if candidate and candidate not in normalized:
                     normalized.append(candidate)
         return normalized[:3]
+
+    @staticmethod
+    def _signal_set(payload: Dict[str, Any]) -> set[str]:
+        return {
+            str(item).strip().lower()
+            for item in [*payload.get("signals", []), *payload.get("rule_matches", [])]
+            if str(item).strip()
+        }
+
+    @classmethod
+    def _canonical_evidence_items(cls, payload: Dict[str, Any]) -> List[str]:
+        """Build concrete evidence lines from the structured payload."""
+        facts: List[str] = []
+        signals = cls._signal_set(payload)
+        entry_type = str(payload.get("entry_type", "")).strip().lower()
+        source = str(payload.get("source", "")).strip()
+        image_path = str(payload.get("image_path") or payload.get("command") or "").strip()
+        publisher = str(payload.get("publisher", "")).strip()
+        signature_status = str(payload.get("signature_status", "")).strip()
+        signature_l = signature_status.lower()
+        file_exists = payload.get("file_exists")
+
+        persistence_map = {
+            "service": "Persistence is configured as a Windows service",
+            "scheduled_task": "Persistence is configured as a scheduled task",
+            "registry_autorun": "Persistence is configured through a registry autorun",
+            "startup_folder": "Persistence is configured through the Startup folder",
+            "winlogon": "Persistence is configured through Winlogon",
+        }
+        if entry_type in persistence_map:
+            facts.append(persistence_map[entry_type])
+        elif source:
+            facts.append(f"Persistence source: {source}")
+
+        if "user_writable_location" in signals:
+            facts.append("The target path is under a user-writable location")
+        if "unsigned_binary" in signals or signature_l == "unsigned":
+            facts.append("The file is unsigned")
+        elif "invalid_signature" in signals:
+            facts.append("The file signature is missing or invalid")
+        elif signature_status and signature_l not in {"valid", "ok", "trusted", "success", "unknown"}:
+            facts.append(f"Signature status: {signature_status}")
+        elif signature_l == "unknown":
+            facts.append("Signature status could not be verified from the collected evidence")
+
+        if "missing_target" in signals or file_exists is False:
+            facts.append("The target file is missing on disk")
+        if "obfuscated_command" in signals:
+            facts.append("The command line includes obfuscation indicators")
+        if "relative_path" in signals:
+            facts.append("The command uses a relative executable path")
+        if publisher:
+            facts.append(f"Publisher: {publisher}")
+        if image_path:
+            facts.append(f"Target path: {image_path}")
+
+        normalized: List[str] = []
+        for fact in facts:
+            candidate = str(fact).strip()
+            if not candidate or candidate in normalized:
+                continue
+            normalized.append(candidate)
+        return normalized[:5]
+
+    @classmethod
+    def _subject_phrase(cls, payload: Dict[str, Any], definite: bool = False) -> str:
+        entry_type = str(payload.get("entry_type", "")).strip().lower()
+        mapping = {
+            "service": ("This service", "the service"),
+            "scheduled_task": ("This scheduled task", "the scheduled task"),
+            "registry_autorun": ("This registry autorun", "the registry autorun"),
+            "startup_folder": ("This startup entry", "the startup entry"),
+            "winlogon": ("This Winlogon entry", "the Winlogon entry"),
+        }
+        this_phrase, the_phrase = mapping.get(entry_type, ("This persistence entry", "the persistence entry"))
+        return the_phrase if definite else this_phrase
+
+    @classmethod
+    def _concern_phrases(cls, payload: Dict[str, Any]) -> List[str]:
+        signals = cls._signal_set(payload)
+        signature_status = str(payload.get("signature_status", "")).strip().lower()
+        concerns: List[str] = []
+        if "user_writable_location" in signals:
+            concerns.append("points to a user-writable path")
+        if (
+            "unsigned_binary" in signals
+            or "invalid_signature" in signals
+            or signature_status in {"unsigned", "invalid", "untrusted", "error", "revoked"}
+        ):
+            concerns.append("does not have a trusted signature")
+        if "missing_target" in signals or payload.get("file_exists") is False:
+            concerns.append("references a target that is missing on disk")
+        if "obfuscated_command" in signals:
+            concerns.append("uses an obfuscated command line")
+        if "relative_path" in signals:
+            concerns.append("uses a relative executable path")
+        return concerns
+
+    @staticmethod
+    def _join_phrases(parts: List[str]) -> str:
+        if not parts:
+            return ""
+        if len(parts) == 1:
+            return parts[0]
+        if len(parts) == 2:
+            return f"{parts[0]} and {parts[1]}"
+        return f"{', '.join(parts[:-1])}, and {parts[-1]}"
+
+    @classmethod
+    def _compose_summary(cls, payload: Dict[str, Any], advice: LlmAdvice) -> str:
+        subject = cls._subject_phrase(payload)
+        concerns = cls._concern_phrases(payload)
+        if advice.assessment == "clean":
+            return f"{subject} does not show suspicious persistence indicators in the current evidence."
+        if concerns:
+            reason_text = cls._join_phrases(concerns[:2])
+            if advice.recommended_action in {"review_manually", "collect_more_evidence", "open_location"}:
+                return f"{subject} {reason_text}, but the current evidence is still limited enough to require review."
+            return f"{subject} {reason_text}, which supports a {advice.assessment} assessment."
+        return f"{subject} is assessed as {advice.assessment} from the current structured evidence."
+
+    @classmethod
+    def _compose_justification(cls, payload: Dict[str, Any], advice: LlmAdvice) -> str:
+        subject = cls._subject_phrase(payload, definite=True)
+        concerns = cls._concern_phrases(payload)
+        reason_text = cls._join_phrases(concerns[:2]) or "is backed by the current persistence evidence"
+        if advice.recommended_action == "disable":
+            return (
+                f"Disable is preferred because {subject} {reason_text}; it stops the persistence point "
+                "without taking a permanent action like delete."
+            )
+        if advice.recommended_action == "review_manually":
+            return (
+                f"Manual review is preferred because {subject} {reason_text}, but the current evidence "
+                "is not strong enough for a destructive remediation step."
+            )
+        if advice.recommended_action == "collect_more_evidence":
+            return (
+                f"Collecting more evidence is safer because {subject} {reason_text}, and the current "
+                "record is still too thin for confident remediation."
+            )
+        if advice.recommended_action == "open_location":
+            return (
+                f"Open Location is the safest next step because {subject} {reason_text}, and inspecting "
+                "the target on disk will clarify whether remediation is justified."
+            )
+        if advice.recommended_action == "jump_to_registry":
+            return (
+                f"Jump to Registry is the safest next step because {subject} {reason_text}, and reviewing "
+                "the persistence value in context comes before any stronger action."
+            )
+        if advice.recommended_action == "quarantine_candidate":
+            return (
+                f"Quarantine is reasonable because {subject} {reason_text}, while still keeping the "
+                "response more reversible than delete."
+            )
+        if advice.recommended_action == "delete":
+            return (
+                f"Delete is only justified when {subject} is supported by multiple strong indicators of "
+                "malicious persistence; if that confidence drops, prefer disable instead."
+            )
+        return (
+            f"No immediate action is recommended because the current evidence around {subject} does not "
+            "establish a strong reason for remediation."
+        )
 
     @staticmethod
     def _build_prompt(payload: Dict[str, Any]) -> str:

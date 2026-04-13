@@ -650,7 +650,7 @@ class MainWindow(QMainWindow):
             self.app_settings.llm_component_error = ""
             self._persist_settings()
             self._set_advisor_progress(True, "Preparing local AI component...", 5)
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
                 "<p>Heuristic evidence remains available while the optional component installs.</p>"
             )
@@ -662,7 +662,7 @@ class MainWindow(QMainWindow):
         self.app_settings.llm_component_error = ""
         self._persist_settings()
         self._set_advisor_progress(True, "Preparing local AI component...", 0)
-        self.advisor_text.setHtml(
+        self._set_advisor_html(
             f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
             "<p>Heuristic evidence remains available while the optional component installs.</p>"
         )
@@ -800,32 +800,32 @@ class MainWindow(QMainWindow):
     def _reset_advisor_panel(self):
         self._set_advisor_progress(False)
         if not self.llm_mode_is_configured and self.session_llm_mode is None:
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 "<p>Configure <strong>LLM Assistance</strong> from the menu or when you use Get Evidence.</p>"
             )
             return
 
         mode = self._effective_llm_mode()
         if mode == LlmMode.OFF:
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 "<p><strong>LLM Assistance:</strong> Off</p><p>Heuristic evidence remains available.</p>"
             )
             return
 
         status = self.llm_advisor.component_status(mode)
         if status["available"]:
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 f"<p><strong>{mode.value.capitalize()}</strong> mode ready.</p>"
                 "<p>Use Get Evidence to request local advisory.</p>"
             )
         elif self.app_settings.llm_component_status == "installing":
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
                 "<p>Heuristic evidence remains available while the optional component installs.</p>"
             )
             self._set_advisor_progress(True, "Preparing local AI component...", 5)
         else:
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 f"<p><strong>{mode.value.capitalize()}</strong> mode selected, but the optional component is not ready.</p>"
                 f"<p>Status: {self._escape_html(status['status'])}</p>"
                 f"<p>Estimated download: {self._escape_html(status['estimated_download'])}</p>"
@@ -939,8 +939,10 @@ class MainWindow(QMainWindow):
 
         self.selected_row_id = row_ctx.row_id
         self.current_evidence = self.evidence_cache.get(row_ctx.scored_entry.entry.entry_id)
-        self.current_advice = self.advice_cache.get(
-            (row_ctx.scored_entry.entry.entry_id, self._effective_llm_mode().value)
+        self.current_advice = self._get_cached_advice(
+            row_ctx.scored_entry,
+            self.current_evidence,
+            self._effective_llm_mode(),
         )
         self.pending_llm_row_id = None
         self._update_details_panel()
@@ -1004,7 +1006,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
 
     def _render_cached_advice_or_reset(self, row_ctx: RowContext):
         if row_ctx.kind == "removed":
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 "<p><strong>Historical removed entry.</strong></p><p>LLM advice is only available for current evidence gathered from the live system.</p>"
             )
             return
@@ -1014,14 +1016,18 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             return
 
         entry_id = row_ctx.scored_entry.entry.entry_id
-        cached = self.advice_cache.get((entry_id, self._effective_llm_mode().value))
+        cached = self._get_cached_advice(
+            row_ctx.scored_entry,
+            self.evidence_cache.get(entry_id),
+            self._effective_llm_mode(),
+        )
         if cached:
             self.current_advice = cached
             self._render_advice(cached)
             return
 
         if self.app_settings.llm_component_status == "installing" and self._effective_llm_mode() != LlmMode.OFF:
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 "<p><strong>Preparing local AI component...</strong></p>"
                 "<p>Heuristic evidence remains available while the download completes.</p>"
             )
@@ -1035,7 +1041,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         evidence_list = "".join(
             f"<li>{self._escape_html(item)}</li>" for item in sections["evidence"]
         ) or "<li>(none)</li>"
-        self.advisor_text.setHtml(
+        self._set_advisor_html(
             f"<p><strong>Summary:</strong> {self._escape_html(sections['summary'])}</p>"
             f"<p><strong>Assessment:</strong> {self._escape_html(sections['assessment'])}</p>"
             f"<p><strong>Recommended Action:</strong> {self._escape_html(sections['recommended_action'])}</p>"
@@ -1049,6 +1055,36 @@ Rule Matches ({len(scored_entry.rule_matches)}):
     @staticmethod
     def _escape_html(value: str) -> str:
         return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    def _set_advisor_html(self, html: str):
+        self.advisor_text.setHtml(html)
+        scrollbar = self.advisor_text.verticalScrollBar()
+        if scrollbar is not None:
+            scrollbar.setValue(0)
+
+    def _advice_cache_key(
+        self,
+        scored_entry: ScoredEntry,
+        evidence,
+        mode: LlmMode,
+    ) -> Tuple[str, str]:
+        fingerprint = self.llm_advisor.cache_fingerprint(
+            scored_entry.entry,
+            scored_entry,
+            evidence,
+            mode,
+        )
+        return (scored_entry.entry.entry_id, fingerprint)
+
+    def _get_cached_advice(
+        self,
+        scored_entry: ScoredEntry,
+        evidence,
+        mode: LlmMode,
+    ) -> Optional[LlmAdvice]:
+        if mode == LlmMode.OFF:
+            return None
+        return self.advice_cache.get(self._advice_cache_key(scored_entry, evidence, mode))
 
     def _on_filter_entries(self, text: str = ""):
         self._populate_entries_table()
@@ -1131,12 +1167,12 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.statusBar().showMessage(f"Evidence loaded for {scored_entry.entry.entry_id}")
 
         if mode == LlmMode.OFF:
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 "<p><strong>LLM Assistance:</strong> Off</p><p>Evidence and heuristic explanation remain available.</p>"
             )
             return
 
-        cache_key = (scored_entry.entry.entry_id, mode.value)
+        cache_key = self._advice_cache_key(scored_entry, evidence, mode)
         cached = self.advice_cache.get(cache_key)
         if cached:
             self.current_advice = cached
@@ -1149,14 +1185,14 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             pending_request=(row_ctx.row_id, evidence, mode),
             show_banner=True,
         ):
-            self.advisor_text.setHtml(
+            self._set_advisor_html(
                 f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
                 "<p>Continuing with heuristic evidence while the optional component installs.</p>"
             )
             self._set_advisor_progress(True, "Preparing local AI component...", 5)
             return
 
-        self.advisor_text.setHtml("<p>Loading local advisory...</p>")
+        self._set_advisor_html("<p>Loading local advisory...</p>")
         self._set_advisor_progress(False)
         self._start_llm_advisory_worker(row_ctx, evidence, mode)
 
@@ -1199,7 +1235,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         if pending and pending[2] == result.mode:
             row_ctx = self._current_row_context()
             if row_ctx is not None and row_ctx.row_id == pending[0]:
-                self.advisor_text.setHtml("<p>Loading local advisory...</p>")
+                self._set_advisor_html("<p>Loading local advisory...</p>")
                 self._start_llm_advisory_worker(row_ctx, pending[1], result.mode)
             else:
                 self._reset_advisor_panel()
@@ -1223,7 +1259,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.llm_install_mode = None
         self.queued_install_mode = None
         self.pending_advice_request = None
-        self.advisor_text.setHtml(
+        self._set_advisor_html(
             "<p><strong>LLM component install failed.</strong></p>"
             "<p>Falling back to heuristic evidence.</p>"
             f"<pre>{self._escape_html(message)}</pre>"
@@ -1237,7 +1273,12 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.current_advice = advice
         self.pending_llm_row_id = None
         entry_id = row_ctx.scored_entry.entry.entry_id
-        self.advice_cache[(entry_id, self._effective_llm_mode().value)] = advice
+        cache_key = self._advice_cache_key(
+            row_ctx.scored_entry,
+            self.evidence_cache.get(entry_id),
+            self._effective_llm_mode(),
+        )
+        self.advice_cache[cache_key] = advice
         self.app_settings.llm_component_status = "installed"
         self.app_settings.llm_component_error = ""
         self._sync_llm_component_settings()
@@ -1254,7 +1295,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.pending_llm_row_id = None
         self._persist_settings()
         self._set_advisor_progress(False)
-        self.advisor_text.setHtml(
+        self._set_advisor_html(
             "<p><strong>LLM advisory unavailable.</strong></p>"
             "<p>Falling back to heuristic evidence.</p>"
             f"<pre>{self._escape_html(message)}</pre>"
@@ -1270,7 +1311,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.pending_llm_row_id = None
         self._persist_settings()
         self._set_advisor_progress(False)
-        self.advisor_text.setHtml(
+        self._set_advisor_html(
             "<p><strong>LLM advisory failed.</strong></p>"
             "<p>Falling back to heuristic evidence.</p>"
             f"<pre>{self._escape_html(message)}</pre>"
@@ -1475,8 +1516,8 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             entry = scored_entry.entry
             evidence = self.evidence_cache.get(entry.entry_id)
             advice = None
-            for mode in (LlmMode.BETTER.value, LlmMode.FAST.value):
-                advice = self.advice_cache.get((entry.entry_id, mode))
+            for mode in (LlmMode.BETTER, LlmMode.FAST):
+                advice = self._get_cached_advice(scored_entry, evidence, mode)
                 if advice:
                     break
 

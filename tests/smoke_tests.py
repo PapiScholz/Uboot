@@ -362,6 +362,84 @@ def test_llm_advisor_payload_and_validation():
     print("  ✓ Advisor payload and validation verified")
 
 
+def test_llm_advisor_stabilizes_weak_output():
+    """Verify poor small-model output is normalized into safer, concrete advice."""
+    print("Testing LLM advisor stabilization for weak output...")
+
+    advisor = LlmAdvisor(component_root=Path("tests/fixtures/fake-llm"))
+    scorer = Scorer()
+    entry = Entry(
+        entry_id="svc-defender-test",
+        name="Microsoft Defender Core Service",
+        command="C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.26030.3011-0\\MpDefenderCoreService.exe",
+        image_path="C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.26030.3011-0\\MpDefenderCoreService.exe",
+        source="Services",
+        status="unknown",
+        metadata={"target_exists": True},
+    )
+    scored_entry = scorer.score([entry])[0]
+    payload = advisor.build_payload(entry, scored_entry, None)
+    advice = advisor.validate_response(
+        {
+            "summary": "The service is suspicious.",
+            "evidence": ["C:\\"],
+            "assessment": "malicious",
+            "recommended_action": "disable",
+            "secondary_action": "quarantine_candidate",
+            "justification": "The service is suspicious service running on the system.",
+            "false_positive_risk": "low",
+            "confidence": "high",
+        }
+    )
+
+    advisor._stabilize_advice(payload, advice)
+
+    assert advice.recommended_action == "review_manually"
+    assert advice.secondary_action == "open_location"
+    assert advice.confidence == "medium"
+    assert advice.false_positive_risk == "medium"
+    assert "user-writable path" in advice.summary.lower()
+    assert advice.evidence[0] == "Persistence is configured as a Windows service"
+    assert "Target path:" in advice.evidence[-1]
+    assert "not strong enough for a destructive remediation step" in advice.justification
+
+    print("  ✓ Weak advisory output stabilized")
+
+
+def test_llm_advisor_cache_fingerprint_tracks_payload_and_mode():
+    """Verify cache keys invalidate when payload or mode changes."""
+    print("Testing LLM advisor cache fingerprinting...")
+
+    advisor = LlmAdvisor(component_root=Path("tests/fixtures/fake-llm"))
+    scorer = Scorer()
+    entry = Entry(
+        entry_id="cache-test",
+        name="Suspicious Autorun",
+        command="C:\\Users\\User\\AppData\\Local\\Temp\\evil.exe",
+        image_path="C:\\Users\\User\\AppData\\Local\\Temp\\evil.exe",
+        source="RunRegistry",
+        status="active",
+        metadata={"signature_status": "Unsigned", "target_exists": True},
+    )
+    scored_entry = scorer.score([entry])[0]
+    evidence = EntryEvidence(
+        entry_id=entry.entry_id,
+        file_info={"exists": True},
+        authenticode={"signed": False, "status": "Unsigned"},
+    )
+
+    fast_fingerprint = advisor.cache_fingerprint(entry, scored_entry, evidence, LlmMode.FAST)
+    better_fingerprint = advisor.cache_fingerprint(entry, scored_entry, evidence, LlmMode.BETTER)
+    entry.metadata["signature_status"] = "Valid"
+    rescored_entry = scorer.score([entry])[0]
+    changed_fingerprint = advisor.cache_fingerprint(entry, rescored_entry, evidence, LlmMode.FAST)
+
+    assert fast_fingerprint != better_fingerprint
+    assert fast_fingerprint != changed_fingerprint
+
+    print("  ✓ Advisory cache fingerprint verified")
+
+
 def test_settings_persistence():
     """Verify settings persist the global LLM mode and component state."""
     print("Testing settings persistence...")
@@ -507,6 +585,8 @@ def run_all_tests():
         test_evidence_metadata_updates,
         test_scorer_classifies_correctly,
         test_llm_advisor_payload_and_validation,
+        test_llm_advisor_stabilizes_weak_output,
+        test_llm_advisor_cache_fingerprint_tracks_payload_and_mode,
         test_settings_persistence,
         test_llm_component_installation_flow,
         test_snapshot_persistence,

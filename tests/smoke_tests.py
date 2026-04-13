@@ -1,15 +1,18 @@
 """Smoke tests for Uboot Python components."""
 import sys
 import json
+from tempfile import TemporaryDirectory
 from pathlib import Path
 
 # Add repo root to path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.orchestrator.scanner import Entry, ScanResult, CollectorError, Scanner
 from app.orchestrator.evidence import EntryEvidence
 from app.orchestrator.scoring import Scorer, RiskLevel
 from app.orchestrator.snapshot import SnapshotManager, Snapshot
+from app.orchestrator.llm_advisor import LlmAdvisor, LlmMode
+from app.settings import AppSettings, SettingsStore
 from tests.fixtures.fixtures import (
     CLEAN_ENTRY, SUSPICIOUS_ENTRY, MALICIOUS_ENTRY,
     SCAN_RESULT_FIXTURE, TX_PLAN_FIXTURE
@@ -241,6 +244,84 @@ def test_snapshot_diff_detection():
     print(f"  ✓ Unchanged entries: {diff.unchanged_entry_count}")
 
 
+def test_llm_advisor_payload_and_validation():
+    """Verify advisor payload structure and strict output validation."""
+    print("Testing LLM advisor payload and validation...")
+
+    advisor = LlmAdvisor(component_root=Path("tests/fixtures/fake-llm"))
+    scorer = Scorer()
+    entry = Entry(
+        entry_id=SUSPICIOUS_ENTRY["entry_id"],
+        name=SUSPICIOUS_ENTRY["name"],
+        command=SUSPICIOUS_ENTRY["command"],
+        image_path="C:\\Users\\Admin\\AppData\\Local\\Temp\\mystery.exe",
+        source=SUSPICIOUS_ENTRY["source"],
+        status=SUSPICIOUS_ENTRY["status"],
+        metadata={
+            **SUSPICIOUS_ENTRY["metadata"],
+            "signature_status": "Unsigned",
+            "target_exists": True,
+        },
+    )
+    scored_entry = scorer.score([entry])[0]
+    evidence = EntryEvidence(
+        entry_id=entry.entry_id,
+        file_info={"exists": True, "last_write_time_utc": "2026-04-12T10:30:00Z"},
+        authenticode={"signed": False, "status": "Unsigned"},
+        raw_evidence={"hashes": {"sha256": "abc123"}},
+    )
+
+    payload = advisor.build_payload(entry, scored_entry, evidence)
+    assert payload["name"] == entry.name
+    assert payload["entry_type"] == "registry_autorun"
+    assert payload["available_actions"][0] == "no_action"
+    assert "signals" in payload and isinstance(payload["signals"], list)
+
+    advice = advisor.validate_response(
+        {
+            "summary": "Unsigned autorun from a user-writable path.",
+            "evidence": [
+                "unsigned binary in user-writable path",
+                "registry autorun persistence",
+            ],
+            "assessment": "suspicious",
+            "recommended_action": "disable",
+            "secondary_action": "open_location",
+            "justification": "Disable is safer than delete until more evidence is collected.",
+            "false_positive_risk": "medium",
+            "confidence": "medium",
+        }
+    )
+    assert advice.recommended_action == "disable"
+    assert advice.assessment == "suspicious"
+
+    print("  ✓ Advisor payload and validation verified")
+
+
+def test_settings_persistence():
+    """Verify settings persist the global LLM mode and component state."""
+    print("Testing settings persistence...")
+
+    with TemporaryDirectory() as temp_dir:
+        settings_path = Path(temp_dir) / "settings.json"
+        store = SettingsStore(settings_path)
+        expected = AppSettings(
+            llm_mode="better",
+            llm_mode_configured=True,
+            llm_component_status="installed",
+            llm_component_error="",
+        )
+
+        store.save(expected)
+        loaded = store.load()
+
+        assert loaded.llm_mode == "better"
+        assert loaded.llm_mode_configured is True
+        assert loaded.llm_component_status == "installed"
+
+    print("  ✓ Settings persistence verified")
+
+
 def run_all_tests():
     """Run all smoke tests."""
     print("\n" + "="*60)
@@ -252,6 +333,8 @@ def run_all_tests():
         test_scanner_parses_core_schema_variant,
         test_evidence_metadata_updates,
         test_scorer_classifies_correctly,
+        test_llm_advisor_payload_and_validation,
+        test_settings_persistence,
         test_snapshot_persistence,
         test_snapshot_diff_detection,
     ]

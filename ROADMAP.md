@@ -64,7 +64,7 @@
 - [x] 4.6 Threading: scan en QThread, GUI sin congelarse, progress bar
 - [x] 4.7 Colorear filas por clasificación
 - [x] 4.8 Filtro live por nombre o fuente
-- [ ] **GATE: flujo completo operable** — *Binario C++ ya compilado; falta validación manual end-to-end en GUI.*
+- [x] **GATE: flujo completo operable** — *Validado manualmente end-to-end en GUI (scan, filtros, details/evidence, remediación plan/undo y respuesta UI).* 
 
 ## Fase 5 — Calidad
 
@@ -77,7 +77,7 @@
 
 - [ ] Más persistence points (AppInit DLLs, COM hijacking, Boot execute, PowerShell profiles)
 - [ ] Diff en background (watchdog notifica nuevas entradas)
-- [ ] Scoring con LLM local para explicaciones en lenguaje natural
+- [ ] Advisor LLM local para explicación de evidencia y recomendación de remediación
 - [ ] Export forense: reporte HTML/PDF con timeline, evidencia, hashes
 - [ ] Multi-scan / timeline visual
 - [ ] Capacidades online opcionales (VirusTotal, WHOIS — toggle OFF por defecto)

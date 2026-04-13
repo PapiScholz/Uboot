@@ -1,5 +1,14 @@
 # AGENTS
 
+## Lecciones de integración y validación (post-Fase 4)
+
+- Antes de depurar la GUI, validar que los subcomandos invocados existen y cumplen el contrato esperado.
+- Confirmar que los datos mostrados en la UI no sean placeholders antes de depurar su flujo.
+- Mantener `.gitignore` actualizado y limpiar artefactos generados antes de validar entregables o marcar hitos.
+- Verificar el entorno Python y dependencias antes de depurar errores de importación o tipado.
+- Marcar los hitos del roadmap apenas se validen, no dejarlo para el final, para facilitar el tracking y evitar confusión.
+
+
 ## Execution Checklist for This Repo
 
 - Validate runtime policy first: before deep debugging, run `build-vs18/bin/Release/uboot-core.exe --help` (or equivalent) to detect App Control/WDAC blocking early.

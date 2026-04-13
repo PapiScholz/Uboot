@@ -1,23 +1,34 @@
 """Uboot GUI main application."""
 import sys
 import json
-from pathlib import Path
 from typing import Optional, List
 from datetime import datetime
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QTableWidget, QTableWidgetItem, QLabel, QPushButton,
-    QMenu, QMenuBar, QToolBar, QTextEdit, QComboBox, QLineEdit,
+    QTextEdit, QComboBox, QLineEdit,
     QDialog, QDialogButtonBox, QMessageBox, QProgressBar, QStatusBar,
-    QFileDialog, QInputDialog, QSizePolicy, QAbstractItemView
+    QFileDialog, QInputDialog, QSizePolicy, QAbstractItemView, QCheckBox,
+    QRadioButton, QButtonGroup
 )
-from PySide6.QtCore import Qt, QThread, Signal, QTimer
-from PySide6.QtGui import QColor, QIcon
+from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtGui import QColor, QActionGroup
 
-from app.orchestrator import Scanner, Scorer, Evidence, Remediation, SnapshotManager
+from app.orchestrator import (
+    Scanner,
+    Scorer,
+    Evidence,
+    Remediation,
+    SnapshotManager,
+    LlmAdvisor,
+    LlmMode,
+    LlmAdvice,
+)
 from app.orchestrator.scanner import ScanResult
 from app.orchestrator.scoring import ScoredEntry, RiskLevel
+from app.orchestrator.llm_advisor import ComponentUnavailableError
+from app.settings import SettingsStore
 
 
 class ScanWorker(QThread):
@@ -42,6 +53,105 @@ class ScanWorker(QThread):
             self.error.emit(f"Scan failed: {str(e)}")
 
 
+class LlmAdvisorWorker(QThread):
+    """Background worker for local LLM advisory."""
+
+    finished = Signal(object)
+    unavailable = Signal(str)
+    error = Signal(str)
+
+    def __init__(self, advisor: LlmAdvisor, entry, scored_entry, evidence, mode: LlmMode):
+        super().__init__()
+        self.advisor = advisor
+        self.entry = entry
+        self.scored_entry = scored_entry
+        self.evidence = evidence
+        self.mode = mode
+
+    def run(self):
+        """Run local advisory in background."""
+        try:
+            advice = self.advisor.advise(
+                entry=self.entry,
+                scored_entry=self.scored_entry,
+                evidence=self.evidence,
+                mode=self.mode,
+            )
+            self.finished.emit(advice)
+        except ComponentUnavailableError as exc:
+            self.unavailable.emit(str(exc))
+        except Exception as exc:
+            self.error.emit(str(exc))
+
+
+class LlmModeDialog(QDialog):
+    """Short global LLM selection dialog shown from Get Evidence."""
+
+    def __init__(self, advisor: LlmAdvisor, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("LLM Assistance")
+        self.resize(520, 340)
+
+        layout = QVBoxLayout(self)
+        intro = QLabel(
+            "Local LLM assistance can improve the evidence explanation and help justify "
+            "a recommended remediation. Recommendations remain assisted: you keep control "
+            "over the action."
+        )
+        intro.setWordWrap(True)
+        layout.addWidget(intro)
+
+        info = QLabel(
+            "Off\n"
+            "Solo heurística local, sin asistencia LLM.\n\n"
+            "Fast\n"
+            "Menor consumo, respuesta más rápida, calidad más conservadora.\n\n"
+            "Better\n"
+            "Mejor justificación y mejor recomendación, con mayor costo de recursos.\n\n"
+            f"Fast: {advisor.get_profile(LlmMode.FAST).estimated_ram} · "
+            f"{advisor.get_profile(LlmMode.FAST).estimated_latency}\n"
+            f"Better: {advisor.get_profile(LlmMode.BETTER).estimated_ram} · "
+            f"{advisor.get_profile(LlmMode.BETTER).estimated_latency}\n\n"
+            "The optional local component may require a separate install or download."
+        )
+        info.setWordWrap(True)
+        layout.addWidget(info)
+
+        self.button_group = QButtonGroup(self)
+        self.off_radio = QRadioButton("Off")
+        self.fast_radio = QRadioButton("Fast")
+        self.better_radio = QRadioButton("Better")
+        self.off_radio.setChecked(True)
+        self.button_group.addButton(self.off_radio)
+        self.button_group.addButton(self.fast_radio)
+        self.button_group.addButton(self.better_radio)
+        layout.addWidget(self.off_radio)
+        layout.addWidget(self.fast_radio)
+        layout.addWidget(self.better_radio)
+
+        self.remember_checkbox = QCheckBox("Remember this choice")
+        layout.addWidget(self.remember_checkbox)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def selected_mode(self) -> LlmMode:
+        """Return the chosen LLM mode."""
+        if self.fast_radio.isChecked():
+            return LlmMode.FAST
+        if self.better_radio.isChecked():
+            return LlmMode.BETTER
+        return LlmMode.OFF
+
+    def remember_choice(self) -> bool:
+        """Return whether the choice should be persisted."""
+        return self.remember_checkbox.isChecked()
+
+
 class MainWindow(QMainWindow):
     """Uboot main application window."""
 
@@ -56,12 +166,22 @@ class MainWindow(QMainWindow):
         self.evidence_gatherer = Evidence(self.scanner.uboot_core_exe)
         self.remediator = Remediation(self.scanner.uboot_core_exe)
         self.snapshot_manager = SnapshotManager()
+        self.settings_store = SettingsStore()
+        self.app_settings = self.settings_store.load()
+        self.llm_advisor = LlmAdvisor()
 
         # State
         self.current_scan_result: Optional[ScanResult] = None
         self.scored_entries: List[ScoredEntry] = []
         self.selected_entry_id: Optional[str] = None
         self.current_tx_id: Optional[str] = None
+        self.current_evidence = None
+        self.current_advice: Optional[LlmAdvice] = None
+        self.session_llm_mode: Optional[LlmMode] = None
+        self.llm_mode = self._load_configured_llm_mode()
+        self.llm_mode_is_configured = bool(self.app_settings.llm_mode_configured)
+        self._updating_llm_actions = False
+        self.pending_llm_entry_id: Optional[str] = None
 
         # Setup UI
         self._setup_menu()
@@ -104,6 +224,27 @@ class MainWindow(QMainWindow):
         
         apply_action = remediation_menu.addAction("&Apply")
         apply_action.triggered.connect(self._on_apply_remediation)
+
+        llm_menu = menubar.addMenu("LLM Assistance")
+        self.llm_action_group = QActionGroup(self)
+        self.llm_action_group.setExclusive(True)
+        self.llm_actions = {}
+        for label, mode in (
+            ("Off", LlmMode.OFF),
+            ("Fast", LlmMode.FAST),
+            ("Better", LlmMode.BETTER),
+        ):
+            action = llm_menu.addAction(label)
+            action.setCheckable(True)
+            action.triggered.connect(
+                lambda checked=False, selected_mode=mode: self._on_llm_mode_selected(
+                    selected_mode, persist=True, user_initiated=True
+                )
+            )
+            self.llm_action_group.addAction(action)
+            self.llm_actions[mode] = action
+
+        self._sync_llm_menu_actions()
 
         # Help menu
         help_menu = menubar.addMenu("&Help")
@@ -187,9 +328,16 @@ class MainWindow(QMainWindow):
         
         self.details_text = QTextEdit()
         self.details_text.setReadOnly(True)
-        self.details_text.setMaximumHeight(400)
+        self.details_text.setMaximumHeight(320)
         self.details_text.setText("Select an entry to view summary. Use Details for full context and Get Evidence for forensic output.")
         right_layout.addWidget(self.details_text)
+
+        right_layout.addWidget(QLabel("LLM Advisory"))
+        self.advisor_text = QTextEdit()
+        self.advisor_text.setReadOnly(True)
+        self.advisor_text.setMaximumHeight(220)
+        right_layout.addWidget(self.advisor_text)
+        self._reset_advisor_panel()
 
         # Middle: action buttons
         right_layout.addWidget(QLabel("Actions"))
@@ -243,6 +391,114 @@ class MainWindow(QMainWindow):
         self.name_filter.textChanged.connect(self._on_filter_entries)
         self.source_combo.currentTextChanged.connect(self._on_filter_entries)
 
+    def _load_configured_llm_mode(self) -> LlmMode:
+        """Load the persisted LLM mode or default to Off."""
+        return self.llm_advisor.parse_mode(self.app_settings.llm_mode) or LlmMode.OFF
+
+    def _persist_settings(self):
+        """Persist current settings."""
+        self.settings_store.save(self.app_settings)
+
+    def _sync_llm_menu_actions(self):
+        """Keep menu state aligned with the active global mode."""
+        self._updating_llm_actions = True
+        for mode, action in self.llm_actions.items():
+            action.setChecked(mode == self.llm_mode)
+        self._updating_llm_actions = False
+
+    def _on_llm_mode_selected(
+        self,
+        mode: LlmMode,
+        persist: bool,
+        user_initiated: bool = False,
+    ):
+        """Apply a global LLM mode selection."""
+        if self._updating_llm_actions:
+            return
+
+        self.llm_mode = mode
+        if persist:
+            self.app_settings.llm_mode = mode.value
+            self.app_settings.llm_mode_configured = True
+            self.llm_mode_is_configured = True
+            self._persist_settings()
+            self.session_llm_mode = None
+        else:
+            self.session_llm_mode = mode
+
+        self._sync_llm_menu_actions()
+        self._reset_advisor_panel()
+
+        if user_initiated and mode != LlmMode.OFF:
+            self._offer_missing_component(mode)
+
+        if user_initiated:
+            self.statusBar().showMessage(f"LLM Assistance: {mode.value.capitalize()}")
+
+    def _effective_llm_mode(self) -> LlmMode:
+        """Return the current effective mode, preferring the session choice."""
+        return self.session_llm_mode or self.llm_mode
+
+    def _resolve_llm_mode_for_evidence(self) -> LlmMode:
+        """Resolve LLM mode when Get Evidence is used."""
+        if self.llm_mode_is_configured:
+            return self.llm_mode
+        if self.session_llm_mode is not None:
+            return self.session_llm_mode
+
+        dialog = LlmModeDialog(self.llm_advisor, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return LlmMode.OFF
+
+        selected_mode = dialog.selected_mode()
+        self._on_llm_mode_selected(
+            selected_mode,
+            persist=dialog.remember_choice(),
+            user_initiated=False,
+        )
+        return selected_mode
+
+    def _reset_advisor_panel(self):
+        """Reset advisory panel according to the active mode."""
+        if not self.llm_mode_is_configured and self.session_llm_mode is None:
+            self.advisor_text.setText(
+                "Configure LLM Assistance from the menu or when you use Get Evidence."
+            )
+            return
+
+        mode = self._effective_llm_mode()
+        if mode == LlmMode.OFF:
+            self.advisor_text.setText("LLM assistance is off. Heuristic evidence remains available.")
+            return
+
+        status = self.llm_advisor.component_status(mode)
+        if status["available"]:
+            self.advisor_text.setText(
+                f"{mode.value.capitalize()} mode ready. Use Get Evidence to request local advisory."
+            )
+        else:
+            self.advisor_text.setText(
+                f"{mode.value.capitalize()} mode selected, but the optional component is missing.\n\n"
+                f"{self.llm_advisor.install_instructions(mode)}"
+            )
+
+    def _offer_missing_component(self, mode: LlmMode) -> bool:
+        """Show a short install/download offer if the component is missing."""
+        status = self.llm_advisor.component_status(mode)
+        self.app_settings.llm_component_status = status["status"]
+        self.app_settings.llm_component_error = "" if status["available"] else status["message"]
+        self._persist_settings()
+
+        if status["available"]:
+            return True
+
+        QMessageBox.information(
+            self,
+            "Optional Local AI Component",
+            self.llm_advisor.install_instructions(mode),
+        )
+        return False
+
     def _on_start_scan(self, sources: List[str]):
         """Start system scan in background."""
         self.statusBar().showMessage("Scanning...")
@@ -259,6 +515,8 @@ class MainWindow(QMainWindow):
         """Handle scan completion."""
         self.current_scan_result = result
         self.current_tx_id = None
+        self.current_evidence = None
+        self.current_advice = None
         self.statusBar().showMessage(f"Scan complete: {len(result.entries)} entries")
         self.progress_bar.setVisible(False)
 
@@ -282,6 +540,9 @@ class MainWindow(QMainWindow):
         """Populate entries table with scored entries."""
         self.entries_table.clearSelection()
         self.selected_entry_id = None
+        self.current_evidence = None
+        self.current_advice = None
+        self._reset_advisor_panel()
         self.entries_table.setRowCount(len(self.scored_entries))
 
         for row, scored_entry in enumerate(self.scored_entries):
@@ -351,7 +612,11 @@ class MainWindow(QMainWindow):
 
         if 0 <= row < len(self.scored_entries):
             self.selected_entry_id = self.scored_entries[row].entry.entry_id
+            self.current_evidence = None
+            self.current_advice = None
+            self.pending_llm_entry_id = None
             self._update_details_panel()
+            self._reset_advisor_panel()
         else:
             self.selected_entry_id = None
 
@@ -420,7 +685,10 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         if current_row >= 0 and self.entries_table.isRowHidden(current_row):
             self.entries_table.clearSelection()
             self.selected_entry_id = None
+            self.current_evidence = None
+            self.current_advice = None
             self.details_text.setText("Select an entry to view summary. Use Details for full context and Get Evidence for forensic output.")
+            self._reset_advisor_panel()
 
     def _selected_scored_entry(self) -> Optional[ScoredEntry]:
         """Return currently selected scored entry."""
@@ -474,12 +742,16 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             QMessageBox.warning(self, "No Selection", "Please select a valid entry first.")
             return
 
+        mode = self._resolve_llm_mode_for_evidence()
+
         try:
             evidence = self.evidence_gatherer.get_evidence(scored_entry.entry)
         except Exception as e:
             QMessageBox.critical(self, "Evidence Error", str(e))
             return
 
+        self.current_evidence = evidence
+        self.current_advice = None
         scored_entry.entry.metadata.update(evidence.to_metadata_updates())
         current_row = self.entries_table.currentRow()
         if current_row >= 0:
@@ -487,7 +759,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             if signed_item is not None:
                 signed_item.setText(self._format_signed_status(scored_entry.entry))
 
-        self._update_details_panel(include_metadata=False)
+        self._update_details_panel(include_metadata=True)
 
         pretty = json.dumps(evidence.raw_evidence or {}, indent=2)
 
@@ -515,6 +787,98 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         evidence_dialog.exec()
 
         self.statusBar().showMessage(f"Evidence loaded for {self.selected_entry_id}")
+
+        if mode == LlmMode.OFF:
+            self.advisor_text.setText(
+                "LLM assistance is off for this request. Evidence and heuristic explanation remain available."
+            )
+            return
+
+        if not self._offer_missing_component(mode):
+            self.advisor_text.setText(
+                f"{mode.value.capitalize()} mode selected, but the optional component is not installed.\n\n"
+                "Continuing with heuristic evidence only."
+            )
+            return
+
+        self.advisor_text.setText("Loading local advisory...")
+        self._start_llm_advisory_worker(scored_entry, evidence, mode)
+
+    def _start_llm_advisory_worker(self, scored_entry: ScoredEntry, evidence, mode: LlmMode):
+        """Start local advisor worker."""
+        self.pending_llm_entry_id = scored_entry.entry.entry_id
+        self.llm_worker = LlmAdvisorWorker(
+            advisor=self.llm_advisor,
+            entry=scored_entry.entry,
+            scored_entry=scored_entry,
+            evidence=evidence,
+            mode=mode,
+        )
+        self.llm_worker.finished.connect(self._on_llm_advice_ready)
+        self.llm_worker.unavailable.connect(self._on_llm_advice_unavailable)
+        self.llm_worker.error.connect(self._on_llm_advice_error)
+        self.llm_worker.start()
+
+    def _on_llm_advice_ready(self, advice: LlmAdvice):
+        """Render structured local advisory."""
+        if self.pending_llm_entry_id and self.pending_llm_entry_id != self.selected_entry_id:
+            return
+        self.current_advice = advice
+        self.pending_llm_entry_id = None
+        self.app_settings.llm_component_status = "installed"
+        self.app_settings.llm_component_error = ""
+        self._persist_settings()
+
+        lines = [
+            f"Summary: {advice.summary}",
+            f"Assessment: {advice.assessment}",
+            f"Recommended Action: {advice.recommended_action}",
+        ]
+        if advice.secondary_action:
+            lines.append(f"Secondary Action: {advice.secondary_action}")
+        lines.extend(
+            [
+                f"Confidence: {advice.confidence}",
+                f"False Positive Risk: {advice.false_positive_risk}",
+                "",
+                "Evidence:",
+            ]
+        )
+        if advice.evidence:
+            lines.extend(f"- {item}" for item in advice.evidence)
+        else:
+            lines.append("- (none)")
+        lines.extend(["", f"Justification: {advice.justification}"])
+        self.advisor_text.setText("\n".join(lines))
+        self.statusBar().showMessage("Local advisory ready")
+
+    def _on_llm_advice_unavailable(self, message: str):
+        """Fallback when the optional LLM component is unavailable."""
+        if self.pending_llm_entry_id and self.pending_llm_entry_id != self.selected_entry_id:
+            return
+        self.app_settings.llm_component_status = "missing"
+        self.pending_llm_entry_id = None
+        self.app_settings.llm_component_error = message
+        self._persist_settings()
+        self.advisor_text.setText(
+            "LLM advisory unavailable. Falling back to heuristic evidence.\n\n"
+            f"{message}"
+        )
+        self.statusBar().showMessage("LLM advisory unavailable; using heuristics")
+
+    def _on_llm_advice_error(self, message: str):
+        """Fallback when the optional LLM inference fails."""
+        if self.pending_llm_entry_id and self.pending_llm_entry_id != self.selected_entry_id:
+            return
+        self.app_settings.llm_component_status = "error"
+        self.pending_llm_entry_id = None
+        self.app_settings.llm_component_error = message
+        self._persist_settings()
+        self.advisor_text.setText(
+            "LLM advisory failed. Falling back to heuristic evidence.\n\n"
+            f"{message}"
+        )
+        self.statusBar().showMessage("LLM advisory failed; using heuristics")
 
     def _on_plan_remediation(self):
         """Plan remediation for selected entry."""

@@ -52,6 +52,8 @@ dist/
 elevated_smoke_result.json
 snapshots/
 tests/fixtures/snapshots/
+llm/runtime/
+llm/models/
 
 # VS Code — keep only tasks and settings
 .vscode/*

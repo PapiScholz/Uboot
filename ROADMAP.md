@@ -35,16 +35,13 @@
 - [x] 2.2 Crear cli/main.cpp: entrypoint C++ con subcomandos y salida JSON
 - [x] 2.3 Actualizar CMakeLists.txt: compilar uboot-core.exe desde cli/main.cpp + SOURCES
 - [x] 2.4 Archivar core/scoring/ en docs/archive/scoring_wip/
-- ⏸️ **GATE: `cmake --build` produce `uboot-core.exe` sin errores** — *Bloqueado: falta instalar C++ Build Tools + CMake. Código listo. Ver notas abajo.*
-- ⏸️ **GATE: `uboot-core.exe scan --sources=all` devuelve JSON válido** — *Bloqueado por compilación.*
+- [x] **GATE: `cmake --build` produce `uboot-core.exe` sin errores** — *Validado con VS 2026 generator en `build-vs18`.*
+- [x] **GATE: `uboot-core.exe` devuelve JSON válido en modo collect** — *Validado con `uboot-core.exe --source all --pretty` (exit 0).*
 
 ### Notas de Fase 2
 - ✅ Todos los bugs de código corregidos (BackupStore timestamp, Transaction includes, OperationFactory field names)
 - ✅ cli/main.cpp y CMakeLists.txt listos
-- ⚠️ **BLOCKER BUILD**: VS 2022 BuildTools sin C++ (v170). Necesita:
-  - Reinstalar/agregar C++ workload a BuildTools, O
-  - Instalar CMake + MSVC v143 standalone, O
-  - Usar GitHub Actions CI para compilación remota
+- ✅ Build local validado en Visual Studio Community 2026 (`Visual Studio 18 2026`)
 
 ## Fase 3 — Capa Python: orquestación e inteligencia
 
@@ -54,7 +51,7 @@
 - [x] 3.4 `scoring.py`: carga rules_v1.json, produce score + classification + signals + explanation
 - [x] 3.5 `remediation.py`: construye plan TX, invoca tx plan/apply/undo
 - [x] 3.6 `snapshot.py`: persiste scans, diff entre sesiones (new / changed / removed)
-- [ ] **GATE: `python -m app.orchestrator.main` produce lista de ScoredEntry con score**
+- [x] **GATE: `python -m app.orchestrator.main` produce lista de ScoredEntry con score** — *Validado (331 entries, exit 0).* 
 - [ ] **GATE: `remediation.py plan --entry-id=<id>` muestra plan sin aplicar**
 
 ## Fase 4 — GUI V1: visual y funcional
@@ -67,14 +64,14 @@
 - [x] 4.6 Threading: scan en QThread, GUI sin congelarse, progress bar
 - [x] 4.7 Colorear filas por clasificación
 - [x] 4.8 Filtro live por nombre o fuente
-- ⏸️ **GATE: flujo completo operable** — *Bloqueado por binario C++. GUI código listo.*
+- [ ] **GATE: flujo completo operable** — *Binario C++ ya compilado; falta validación manual end-to-end en GUI.*
 
 ## Fase 5 — Calidad
 
 - [x] 5.1 `tests/fixtures/`: JSONs de entradas clean, suspicious, malicious + fixtures.py
 - [x] 5.2 Smoke tests Python: scanner + scoring verifican estructura de output (4/4 pasos ✓)
 - [x] 5.3 Smoke test diffs: snapshot diff detection verificado
-- [ ] 5.4 (opcional) GitHub Actions: cmake build + smoke tests en cada push — *Requiere build tools*
+- [ ] 5.4 (opcional) GitHub Actions: cmake build + smoke tests en cada push
 
 ## Fase 6 — Post-V1
 

@@ -43,7 +43,24 @@ class Scanner:
         Args:
             uboot_core_exe: Path to uboot-core.exe binary. If None, searches PATH.
         """
-        self.uboot_core_exe = uboot_core_exe or Path("uboot-core.exe")
+        self.uboot_core_exe = uboot_core_exe or self._resolve_uboot_core_path()
+
+    @staticmethod
+    def _resolve_uboot_core_path() -> Path:
+        """Resolve uboot-core.exe from common local build locations."""
+        candidates = [
+            Path("uboot-core.exe"),
+            Path("build-vs18/bin/Release/uboot-core.exe"),
+            Path("build/bin/Release/uboot-core.exe"),
+            Path("build-vs18/Release/uboot-core.exe"),
+            Path("build/Release/uboot-core.exe"),
+        ]
+
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+
+        return Path("uboot-core.exe")
 
     def scan(
         self, 
@@ -71,10 +88,11 @@ class Scanner:
         if not sources:
             sources = ["all"]
 
-        cmd = [str(self.uboot_core_exe), "collect"]
+        # CLI defaults to collect mode; do not pass subcommand.
+        cmd = [str(self.uboot_core_exe)]
         
         for source in sources:
-            cmd.extend(["--sources", source])
+            cmd.extend(["--source", source])
             
         if pretty_print:
             cmd.append("--pretty")

@@ -1,5 +1,5 @@
 #include "TaskToggleEnabledOp.h"
-#include "../../util/ComUtils.h"
+#include "../util/ComUtils.h"
 #include "../hardening/SecurityLog.h"
 #include <comdef.h>
 #include <comutil.h>

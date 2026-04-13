@@ -8,7 +8,8 @@ from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QTableWidget, QTableWidgetItem, QLabel, QPushButton,
     QMenu, QMenuBar, QToolBar, QTextEdit, QComboBox, QLineEdit,
-    QDialog, QDialogButtonBox, QMessageBox, QProgressBar, QStatusBar
+    QDialog, QDialogButtonBox, QMessageBox, QProgressBar, QStatusBar,
+    QFileDialog, QInputDialog, QSizePolicy
 )
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
 from PySide6.QtGui import QColor, QIcon
@@ -51,14 +52,15 @@ class MainWindow(QMainWindow):
         # Components
         self.scanner = Scanner()
         self.scorer = Scorer()
-        self.evidence_gatherer = Evidence()
-        self.remediator = Remediation()
+        self.evidence_gatherer = Evidence(self.scanner.uboot_core_exe)
+        self.remediator = Remediation(self.scanner.uboot_core_exe)
         self.snapshot_manager = SnapshotManager()
 
         # State
         self.current_scan_result: Optional[ScanResult] = None
         self.scored_entries: List[ScoredEntry] = []
         self.selected_entry_id: Optional[str] = None
+        self.current_tx_id: Optional[str] = None
 
         # Setup UI
         self._setup_menu()
@@ -142,7 +144,9 @@ class MainWindow(QMainWindow):
         remove_btn.clicked.connect(self._on_plan_remediation)
         toolbar.addWidget(remove_btn)
 
-        toolbar.addStretch()
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
 
     def _setup_central_widget(self):
         """Setup central widget with three panels."""
@@ -231,6 +235,7 @@ class MainWindow(QMainWindow):
     def _connect_signals(self):
         """Connect signals."""
         self.name_filter.textChanged.connect(self._on_filter_entries)
+        self.source_combo.currentTextChanged.connect(self._on_filter_entries)
 
     def _on_start_scan(self, sources: List[str]):
         """Start system scan in background."""
@@ -247,6 +252,7 @@ class MainWindow(QMainWindow):
     def _on_scan_complete(self, result: ScanResult):
         """Handle scan completion."""
         self.current_scan_result = result
+        self.current_tx_id = None
         self.statusBar().showMessage(f"Scan complete: {len(result.entries)} entries")
         self.progress_bar.setVisible(False)
 
@@ -255,6 +261,7 @@ class MainWindow(QMainWindow):
 
         # Populate table
         self._populate_entries_table()
+        self._on_filter_entries()
 
         # Save snapshot
         self.snapshot_manager.save(result, label="ui-scan")
@@ -350,12 +357,33 @@ Metadata:
         self.details_text.setText(details)
 
     def _on_filter_entries(self, text: str):
-        """Filter entries by name."""
+        """Filter entries by name and source."""
+        filter_text = self.name_filter.text().strip().lower()
+        source_text = self.source_combo.currentText().strip().lower()
+
         for row in range(self.entries_table.rowCount()):
-            item = self.entries_table.item(row, 0)
-            if item:
-                matches = text.lower() in item.text().lower()
-                self.entries_table.setRowHidden(row, not matches)
+            name_item = self.entries_table.item(row, 0)
+            source_item = self.entries_table.item(row, 3)
+            if not name_item or not source_item:
+                continue
+
+            name_matches = filter_text in name_item.text().lower()
+            if source_text == "all":
+                source_matches = True
+            else:
+                source_matches = source_text in source_item.text().lower()
+
+            self.entries_table.setRowHidden(row, not (name_matches and source_matches))
+
+    def _selected_scored_entry(self) -> Optional[ScoredEntry]:
+        """Return currently selected scored entry."""
+        if not self.selected_entry_id:
+            return None
+
+        return next(
+            (e for e in self.scored_entries if e.entry.entry_id == self.selected_entry_id),
+            None
+        )
 
     def _on_show_details(self):
         """Show details for selected entry."""
@@ -367,7 +395,15 @@ Metadata:
             QMessageBox.warning(self, "No Selection", "Please select an entry first.")
             return
 
-        QMessageBox.information(self, "Evidence", "Evidence gathering not yet implemented.")
+        try:
+            evidence = self.evidence_gatherer.get_evidence(self.selected_entry_id)
+        except Exception as e:
+            QMessageBox.critical(self, "Evidence Error", str(e))
+            return
+
+        pretty = json.dumps(evidence.raw_evidence or {}, indent=2)
+        self.details_text.append("\n\n=== Evidence ===\n" + pretty)
+        self.statusBar().showMessage(f"Evidence loaded for {self.selected_entry_id}")
 
     def _on_plan_remediation(self):
         """Plan remediation for selected entry."""
@@ -375,22 +411,137 @@ Metadata:
             QMessageBox.warning(self, "No Selection", "Please select an entry first.")
             return
 
+        scored_entry = self._selected_scored_entry()
+        if not scored_entry:
+            QMessageBox.warning(self, "No Selection", "Please select a valid entry first.")
+            return
+
+        reason, ok = QInputDialog.getText(
+            self,
+            "Plan Remediation",
+            "Reason for remediation:",
+            text=f"Risk {scored_entry.score}/100 - {scored_entry.risk_level.value}"
+        )
+        if not ok:
+            return
+
+        try:
+            plan = self.remediator.plan([self.selected_entry_id], reason=reason or "User-initiated remediation")
+        except Exception as e:
+            QMessageBox.critical(self, "Plan Error", str(e))
+            return
+
+        self.current_tx_id = plan.tx_id
+        plan_summary = {
+            "tx_id": plan.tx_id,
+            "entry_ids": plan.entry_ids,
+            "reason": plan.reason,
+            "executed": plan.executed,
+            "operations": [
+                {
+                    "type": op.op_type,
+                    "target": op.target,
+                    "action": op.action,
+                    "op_id": op.op_id,
+                    "metadata": op.metadata,
+                }
+                for op in plan.operations
+            ],
+        }
+        self.details_text.append("\n\n=== Remediation Plan ===\n" + json.dumps(plan_summary, indent=2))
+        self.statusBar().showMessage(f"Plan created: {plan.tx_id}")
+
         QMessageBox.information(
-            self, "Plan", 
-            f"Plan would be created for entry: {self.selected_entry_id}"
+            self,
+            "Plan Created",
+            f"Transaction {plan.tx_id} created with {len(plan.operations)} operation(s)."
         )
 
     def _on_apply_remediation(self):
         """Apply remediation plan."""
-        QMessageBox.information(self, "Apply", "Apply remediation not yet implemented.")
+        tx_id = self.current_tx_id
+        if not tx_id:
+            tx_id, ok = QInputDialog.getText(self, "Apply Remediation", "Transaction ID:")
+            if not ok or not tx_id.strip():
+                return
+            tx_id = tx_id.strip()
+
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Apply",
+            f"Apply remediation transaction {tx_id}?"
+        )
+        if confirm != QMessageBox.Yes:
+            return
+
+        try:
+            applied = self.remediator.apply(tx_id)
+        except Exception as e:
+            QMessageBox.critical(self, "Apply Error", str(e))
+            return
+
+        if applied:
+            self.statusBar().showMessage(f"Applied transaction: {tx_id}")
+            QMessageBox.information(self, "Apply", f"Transaction applied: {tx_id}")
+        else:
+            QMessageBox.warning(self, "Apply", f"Transaction apply failed: {tx_id}")
 
     def _on_undo_remediation(self):
         """Undo remediation."""
-        QMessageBox.information(self, "Undo", "Undo not yet implemented.")
+        tx_id, ok = QInputDialog.getText(
+            self,
+            "Undo Remediation",
+            "Transaction ID to undo:",
+            text=self.current_tx_id or ""
+        )
+        if not ok or not tx_id.strip():
+            return
+
+        tx_id = tx_id.strip()
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Undo",
+            f"Undo remediation transaction {tx_id}?"
+        )
+        if confirm != QMessageBox.Yes:
+            return
+
+        try:
+            undone = self.remediator.undo(tx_id)
+        except Exception as e:
+            QMessageBox.critical(self, "Undo Error", str(e))
+            return
+
+        if undone:
+            self.statusBar().showMessage(f"Undone transaction: {tx_id}")
+            QMessageBox.information(self, "Undo", f"Transaction undone: {tx_id}")
+        else:
+            QMessageBox.warning(self, "Undo", f"Transaction undo failed: {tx_id}")
 
     def _on_open_snapshot(self):
         """Open existing snapshot."""
-        QMessageBox.information(self, "Open", "Open snapshot not yet implemented.")
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Open Snapshot",
+            str(self.snapshot_manager.snapshot_dir),
+            "JSON Files (*.json);;All Files (*)"
+        )
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            snapshot = self.snapshot_manager._dict_to_snapshot(data)
+            self.current_scan_result = ScanResult(entries=snapshot.entries, errors=[])
+            self.scored_entries = self.scorer.score(snapshot.entries)
+            self._populate_entries_table()
+            self._on_filter_entries()
+            self.statusBar().showMessage(
+                f"Loaded snapshot with {len(snapshot.entries)} entries"
+            )
+        except Exception as e:
+            QMessageBox.critical(self, "Open Snapshot Error", str(e))
 
     def _on_about(self):
         """Show about dialog."""

@@ -16,9 +16,10 @@ public:
   std::string schemaVersion = "1.0"; // --schema-version flag
 
   // Commands
-  std::string command;    // "collect" (default), "actions"
+  std::string command;    // "collect" (default), "actions"/"tx"
   std::string subCommand; // "list", "undo", "plan", "apply"
   std::string txId;       // --tx flag for undo/apply
+  std::string reason;     // --reason for plan
 
   // Action flags
   std::vector<std::string> targetIds; // --ids

@@ -5,6 +5,7 @@
 # CMake build output
 build/
 build_*/
+build-*/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
@@ -48,6 +49,7 @@ dist/
 *.bak
 *.tmp
 *~
+elevated_smoke_result.json
 
 # VS Code — keep only tasks and settings
 .vscode/*

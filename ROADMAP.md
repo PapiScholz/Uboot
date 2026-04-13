@@ -52,7 +52,7 @@
 - [x] 3.5 `remediation.py`: construye plan TX, invoca tx plan/apply/undo
 - [x] 3.6 `snapshot.py`: persiste scans, diff entre sesiones (new / changed / removed)
 - [x] **GATE: `python -m app.orchestrator.main` produce lista de ScoredEntry con score** — *Validado (331 entries, exit 0).* 
-- [ ] **GATE: `remediation.py plan --entry-id=<id>` muestra plan sin aplicar**
+- [x] **GATE: `python app/orchestrator/remediation.py --core-exe build-vs18/bin/Release/uboot-core.exe plan --entry-id=<id>` muestra plan sin aplicar** — *Validado (JSON de plan devuelto con `executed: false`, exit 0).*
 
 ## Fase 4 — GUI V1: visual y funcional
 

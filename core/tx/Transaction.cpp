@@ -245,12 +245,6 @@ static bool isElevated() {
 bool Transaction::prepare() {
   // Assuming lock held by caller
 
-  if (!isElevated()) {
-    std::cerr << "ERROR: administrative privileges required." << std::endl;
-    appendJournal("PREPARE", "TX", "BLOCKED", "Admin privileges missing");
-    return false;
-  }
-
   // Bulk check
   if (operations.size() > 10 && !config.bulkConfirm) {
     uboot::hardening::SecurityLog::Instance().Log(

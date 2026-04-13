@@ -9,11 +9,12 @@ CliArgs CliArgs::Parse(int argc, char *argv[]) {
 
   // Default mode is collection
   args.command = "collect";
+  args.reason = "User-initiated remediation";
 
   int argIdx = 1;
   if (argc > 1) {
     std::string firstArg = argv[1];
-    if (firstArg == "actions") {
+    if (firstArg == "actions" || firstArg == "tx") {
       args.command = "actions";
       argIdx++; // Consumed 'actions'
 
@@ -60,23 +61,43 @@ CliArgs CliArgs::Parse(int argc, char *argv[]) {
         args.errorMessage = "--schema-version requires a value";
         return args;
       }
-    } else if (arg == "--tx") {
+    } else if (arg == "--tx" || arg == "--tx-id") {
       if (i + 1 < argc) {
         args.txId = argv[++i];
       } else {
-        args.errorMessage = "--tx requires a value";
+        args.errorMessage = "--tx/--tx-id requires a value";
         return args;
       }
-    } else if (arg == "--ids") {
+    } else if (arg == "--ids" || arg == "--entry-ids") {
       if (i + 1 < argc) {
         std::string ids = argv[++i];
         std::stringstream ss(ids);
         std::string item;
         while (std::getline(ss, item, ',')) {
-          args.targetIds.push_back(item);
+          if (!item.empty()) {
+            args.targetIds.push_back(item);
+          }
         }
       } else {
-        args.errorMessage = "--ids requires a value (comma-separated)";
+        args.errorMessage =
+            "--ids/--entry-ids requires a value (comma-separated)";
+        return args;
+      }
+    } else if (arg == "--entry-id") {
+      if (i + 1 < argc) {
+        std::string entryId = argv[++i];
+        if (!entryId.empty()) {
+          args.targetIds.push_back(entryId);
+        }
+      } else {
+        args.errorMessage = "--entry-id requires a value";
+        return args;
+      }
+    } else if (arg == "--reason") {
+      if (i + 1 < argc) {
+        args.reason = argv[++i];
+      } else {
+        args.errorMessage = "--reason requires a value";
         return args;
       }
     } else if (arg == "--disable") {
@@ -108,7 +129,16 @@ CliArgs CliArgs::Parse(int argc, char *argv[]) {
     }
   } else if (args.command == "actions") {
     if (args.subCommand == "undo" && args.txId.empty()) {
-      args.errorMessage = "undo action requires --tx <id>";
+      args.errorMessage = "undo action requires --tx-id <id>";
+      return args;
+    }
+    if (args.subCommand == "apply" && args.txId.empty()) {
+      args.errorMessage = "apply action requires --tx-id <id>";
+      return args;
+    }
+    if (args.subCommand == "plan" && args.targetIds.empty()) {
+      args.errorMessage =
+          "plan action requires --entry-id <id> or --entry-ids <id1,id2,...>";
       return args;
     }
   }

@@ -6,7 +6,7 @@ from pathlib import Path
 # Add repo root to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
-from app.orchestrator.scanner import Entry, ScanResult, CollectorError
+from app.orchestrator.scanner import Entry, ScanResult, CollectorError, Scanner
 from app.orchestrator.scoring import Scorer, RiskLevel
 from app.orchestrator.snapshot import SnapshotManager, Snapshot
 from tests.fixtures.fixtures import (
@@ -94,6 +94,47 @@ def test_scorer_classifies_correctly():
     print(f"  ✓ Malicious entry score: {scored[1].score} ({scored[1].risk_level.value})")
 
 
+def test_scanner_parses_core_schema_variant():
+    """Verify parser supports real core fields (key/imagePath/displayName)."""
+    print("Testing Scanner parsing for core schema variant...")
+
+    payload = {
+        "schema_version": "1.1",
+        "entries": [
+            {
+                "source": "RunRegistry",
+                "scope": "Machine",
+                "key": "Riot Vanguard",
+                "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+                "arguments": "",
+                "imagePath": "C:\\Program Files\\Riot Vanguard\\vgtray.exe",
+                "keyName": "Riot Vanguard"
+            },
+            {
+                "source": "Services",
+                "scope": "Machine",
+                "key": "ADPSvc",
+                "arguments": "-k LocalServiceAndNoImpersonation -p",
+                "imagePath": "C:\\Windows\\system32\\svchost.exe",
+                "displayName": "Aggregated Data Platform Service"
+            }
+        ],
+        "errors": []
+    }
+
+    result = Scanner._parse_scan_result(payload)
+
+    assert len(result.entries) == 2
+    assert result.entries[0].name == "Riot Vanguard"
+    assert result.entries[0].command == "C:\\Program Files\\Riot Vanguard\\vgtray.exe"
+    assert result.entries[0].entry_id != "unknown"
+    assert result.entries[1].name == "Aggregated Data Platform Service"
+    assert "svchost.exe" in result.entries[1].command
+    assert "LocalServiceAndNoImpersonation" in result.entries[1].command
+
+    print("  ✓ Core schema variant parsed correctly")
+
+
 def test_snapshot_persistence():
     """Verify SnapshotManager saves and loads snapshots."""
     print("Testing Snapshot persistence...")
@@ -175,6 +216,7 @@ def run_all_tests():
     
     tests = [
         test_scanner_output_structure,
+        test_scanner_parses_core_schema_variant,
         test_scorer_classifies_correctly,
         test_snapshot_persistence,
         test_snapshot_diff_detection,

@@ -1,0 +1,3663 @@
+{
+  "timestamp": "2026-04-13T17:00:19.092436",
+  "entry_count": 332,
+  "metadata": {
+    "label": "ui-scan",
+    "schema_version": "1.1",
+    "error_count": 0
+  },
+  "entries": [
+    {
+      "entry_id": "runregistry-f50978ccee6ecb58",
+      "name": "Riot Vanguard",
+      "command": "C:\\Program Files\\Riot Vanguard\\vgtray.exe",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-f50978ccee6ecb58",
+      "name": "Riot Vanguard",
+      "command": "C:\\Program Files\\Riot Vanguard\\vgtray.exe",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-55af828debb63b25",
+      "name": "RtkAudUService",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\realtekservice.inf_amd64_26f0df01c9da165d\\RtkAudUService64.exe -background",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-55af828debb63b25",
+      "name": "RtkAudUService",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\realtekservice.inf_amd64_26f0df01c9da165d\\RtkAudUService64.exe -background",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-5b1ba3a142338bf5",
+      "name": "Docker Desktop",
+      "command": "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "User",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-cee0a3946ad3dedc",
+      "name": "EpicGamesLauncher",
+      "command": "C:\\Program Files\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe -silent -launchcontext=boot",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "User",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-5123bc9383b0fc09",
+      "name": "RiotClient",
+      "command": "C:\\Riot Games\\Riot Client\\RiotClientServices.exe --launch-background-mode",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "User",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "runregistry-b6af2bea5644d8b5",
+      "name": "electron.app.Notion",
+      "command": "C:\\Users\\ezesc\\AppData\\Local\\Programs\\Notion\\Notion.exe --open-at-login",
+      "source": "RunRegistry",
+      "status": "unknown",
+      "metadata": {
+        "scope": "User",
+        "location": "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+      }
+    },
+    {
+      "entry_id": "services-8be1c9674aa126d3",
+      "name": "Aggregated Data Platform Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fac087184f832bd0",
+      "name": "Application Layer Gateway Service",
+      "command": "C:\\Windows\\System32\\alg.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-03bdb8802c6a73cf",
+      "name": "AMD Crash Defender Service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\amdfendr.inf_amd64_9bbf7ce85091da4a\\amdfendrsr.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-420a8c4f5ec609df",
+      "name": "AMD External Events Utility",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\u0196209.inf_amd64_9b3780f041ccfe76\\B025475\\atiesrxx.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-997e80bc04057284",
+      "name": "Agent Activation Runtime_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k AarSvcGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b93dd4a4d34d3fc7",
+      "name": "AMD Provisioning Packages Service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\amdppkg.inf_amd64_6b71afde72a0e813\\AmdPpkgSvc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d4952811ce9a0384",
+      "name": "Application Host Helper Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k apphost",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4df818d1efb7234b",
+      "name": "Application Identity",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-13884bfd411ac141",
+      "name": "Application Management",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a576ffd6ed768270",
+      "name": "App Readiness",
+      "command": "C:\\Windows\\System32\\svchost.exe -k AppReadiness -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-57b8a336746bab23",
+      "name": "Microsoft App-V Client",
+      "command": "C:\\Windows\\system32\\AppVClient.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-acd2a6b90e31819e",
+      "name": "AppX Deployment Service (AppXSVC)",
+      "command": "C:\\Windows\\system32\\svchost.exe -k wsappx -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-595f253e33569b66",
+      "name": "Application Information",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0acd90dc49096957",
+      "name": "Windows Virtual Audio Device Proxy Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-18f75c1872e0db57",
+      "name": "AssignedAccessManager Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k AssignedAccessManagerSvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1719f97ae0d98957",
+      "name": "Windows Audio Endpoint Builder",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8bfa3dfd9d576229",
+      "name": "Windows Audio",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ca09d77d8b27e110",
+      "name": "ActiveX Installer (AxInstSV)",
+      "command": "C:\\Windows\\system32\\svchost.exe -k AxInstSVGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a7cf34d5044ba8a8",
+      "name": "BitLocker Drive Encryption Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7c757218a4c1d48c",
+      "name": "Base Filtering Engine",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNoNetworkFirewall -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0e308e1ccceb58ae",
+      "name": "Background Intelligent Transfer Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7b132c9e314c638f",
+      "name": "Bluetooth Audio Gateway Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-eb242e51504e3297",
+      "name": "GameDVR and Broadcast User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k BcastDVRUserService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c934f8a2be1ad727",
+      "name": "Bluetooth User Support Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k BthAppGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-311150402d6530d0",
+      "name": "Background Tasks Infrastructure Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2e3dcebcf1bf9a09",
+      "name": "AVCTP service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-93d594b9fb33a17d",
+      "name": "Connected Devices Platform Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2217f2ed8e7f2c6e",
+      "name": "Connected Devices Platform User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-670ac3070b252ff7",
+      "name": "COM+ System Application",
+      "command": "C:\\Windows\\system32\\dllhost.exe /Processid:{02D4B3F1-FD88-11D1-960D-00805FC79235}",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a078084a7aba339e",
+      "name": "CaptureService_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-48a8db4af1fa746f",
+      "name": "Certificate Propagation",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-233c70c298f6ed0c",
+      "name": "Microsoft Office Click-to-Run Service",
+      "command": "C:\\Program Files\\Common Files\\Microsoft Shared\\ClickToRun\\OfficeClickToRun.exe /service",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1a9a3c76966feb4f",
+      "name": "Client License Service (ClipSVC)",
+      "command": "C:\\Windows\\System32\\svchost.exe -k wsappx -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e92873d060200eb6",
+      "name": "Cloud Backup and Restore Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b0663c167c0379ab",
+      "name": "ConsentUX User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DevicesFlow",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d62a497c5a0eb2d4",
+      "name": "CoreMessaging",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNoNetwork -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b2cf51988fc82c10",
+      "name": "Claude",
+      "command": "C:\\Program Files\\WindowsApps\\Claude_1.1617.0.0_x64__pzs8sxrjxfjjc\\app\\resources\\cowork-svc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-df26b823410efe1d",
+      "name": "CredentialEnrollmentManagerUserSvc_1089ac",
+      "command": "C:\\Windows\\system32\\CredentialEnrollmentManager.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6339ce77700479a4",
+      "name": "Cryptographic Services",
+      "command": "C:\\Windows\\system32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-58f7bc4ce76af023",
+      "name": "Offline Files",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-54cfd695e92af9af",
+      "name": "Diagnostic Policy Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNoNetwork -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-35c280728a00f8d7",
+      "name": "DCOM Server Process Launcher",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-14cb54452133ca56",
+      "name": "DevQuery Background Discovery Broker",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4ab525dc8385a9e3",
+      "name": "DeviceAssociationBroker_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DevicesFlow -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a99fed2ace8fe98d",
+      "name": "Device Association Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a81cdcd45d30199a",
+      "name": "Device Install Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1c73dbe1f768fd87",
+      "name": "DevicePicker_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DevicesFlow",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-554fa754217b66bc",
+      "name": "DevicesFlow_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DevicesFlow",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6c3347287808e4cc",
+      "name": "DHCP Client",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8b7f9fb725792d45",
+      "name": "Connected User Experiences and Telemetry",
+      "command": "C:\\Windows\\System32\\svchost.exe -k utcsvc -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-518a8df50d4173eb",
+      "name": "DialogBlockingService",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DialogBlockingService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6a1a1375f48f3a90",
+      "name": "Display Policy Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-19e55f9ff63e604d",
+      "name": "Display Enhancement Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fe6033070ad49075",
+      "name": "Device Management Enrollment Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b2e0426d71e3ba78",
+      "name": "DNS Client",
+      "command": "C:\\Windows\\system32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f231da7a8badfe21",
+      "name": "Delivery Optimization",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5d4384754f8399fc",
+      "name": "Dolby DAX API Service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\dax3_swc_aposvc.inf_amd64_52fab4c0c715a075\\DAX3API.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-eee9041e430b6c7d",
+      "name": "Data Sharing Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f9d38bf8f7ef832e",
+      "name": "Device Setup Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e16720f6bd054c29",
+      "name": "Data Usage",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted -p -s DusmSvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-42b09d947ac1f149",
+      "name": "Encrypting File System (EFS)",
+      "command": "C:\\Windows\\System32\\lsass.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8f094212ae3fd61b",
+      "name": "Extensible Authentication Protocol",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1ee8f42b26e07fd9",
+      "name": "Easy Anti-Cheat (Epic Online Services)",
+      "command": "C:\\Program Files (x86)\\EasyAntiCheat_EOS\\EasyAntiCheat_EOS.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-86e32399814a487e",
+      "name": "Elevoc Control Service",
+      "command": "C:\\Windows\\System32\\ElevocInstallDriver\\ElevocControlService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4f1b02d6da78d5b4",
+      "name": "Enterprise App Management Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k appmodelRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9c8cbd3c3c2da28a",
+      "name": "Epic Games Updater",
+      "command": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesUpdater.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0a01ddc225376891",
+      "name": "Epic Online Services",
+      "command": "C:\\Program Files (x86)\\Epic Games\\Epic Online Services\\service\\EpicOnlineServicesHost.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6d993c0d5752cf64",
+      "name": "Windows Event Log",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4f931aa741cb5c02",
+      "name": "COM+ Event System",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5fe398c94c2fe660",
+      "name": "Function Discovery Resource Publication",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e84a03c1dc53d665",
+      "name": "FileSyncHelper",
+      "command": "C:\\Program Files\\Microsoft OneDrive\\26.040.0301.0001\\FileSyncHelper.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2f34cf6b0d289141",
+      "name": "Windows Font Cache Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ac4e52374578e20f",
+      "name": "Windows Presentation Foundation Font Cache 3.0.0.0",
+      "command": "C:\\Windows\\Microsoft.Net\\Framework64\\v3.0\\WPF\\PresentationFontCache.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9a0d5ab753aad18d",
+      "name": "Windows Camera Frame Server",
+      "command": "C:\\Windows\\System32\\svchost.exe -k Camera",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-84fa939e9bc7fca0",
+      "name": "Windows Camera Frame Server Monitor",
+      "command": "C:\\Windows\\System32\\svchost.exe -k CameraMonitor",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-208e3f1ddae164fb",
+      "name": "GameInput Redist Service",
+      "command": "C:\\Program Files\\Microsoft GameInput\\x64\\GameInputRedistService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-79fd242dfb415108",
+      "name": "GameInput Service",
+      "command": "C:\\Windows\\System32\\GameInputSvc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c8392f5c4ee43d4d",
+      "name": "Gaming Services",
+      "command": "C:\\Program Files\\WindowsApps\\Microsoft.GamingServices_34.111.20001.0_x64__8wekyb3d8bbwe\\GamingServices.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-daeb4eb380c58543",
+      "name": "Gaming Services",
+      "command": "C:\\Program Files\\WindowsApps\\Microsoft.GamingServices_34.111.20001.0_x64__8wekyb3d8bbwe\\GamingServicesNet.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8baee872369aecdf",
+      "name": "Google Chrome Elevation Service (GoogleChromeElevationService)",
+      "command": "C:\\Program Files\\Google\\Chrome\\Application\\147.0.7727.56\\elevation_service.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-41e88804741342ea",
+      "name": "Google Play Games Services (26.4.52.0)",
+      "command": "C:\\Program Files\\Google\\Play Games Services\\26.4.52.0\\Service\\GooglePlayGamesServices.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ffe52dc804a82805",
+      "name": "Google Updater Internal Service (GoogleUpdaterInternalService148.0.7730.0)",
+      "command": "C:\\Program Files (x86)\\Google\\GoogleUpdater\\148.0.7730.0\\updater.exe --system --windows-service --service=update-internal",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ad5a4e419593a6d2",
+      "name": "Google Updater Service (GoogleUpdaterService148.0.7730.0)",
+      "command": "C:\\Program Files (x86)\\Google\\GoogleUpdater\\148.0.7730.0\\updater.exe --system --windows-service --service=update",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f72a6b5266a0716a",
+      "name": "GraphicsPerfSvc",
+      "command": "C:\\Windows\\System32\\svchost.exe -k GraphicsPerfSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7872fdc9da043813",
+      "name": "HP Print Scan Doctor Service",
+      "command": "C:\\Program Files\\HPPrintScanDoctor\\HPPrintScanDoctorService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-30c2894323804585",
+      "name": "Host Guardian Client Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e16ca9ae38278db9",
+      "name": "HV Host Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ee31921c9b35432a",
+      "name": "IKE and AuthIP IPsec Keying Modules",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8ff2835bf98695db",
+      "name": "System Interface Foundation Service",
+      "command": "C:\\Windows\\Lenovo\\ImController\\Service\\Lenovo.Modern.ImController.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-218bff50c398bbcd",
+      "name": "Incredibuild BuildCache",
+      "command": "C:\\Program Files (x86)\\IncrediBuild\\BuildCacheService.exe --_service Incredibuild BuildCache",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b577d6a2571561d2",
+      "name": "Incredibuild CoordinatorService",
+      "command": "C:\\Program Files (x86)\\IncrediBuild\\CoordinatorService.exe --_service Incredibuild CoordinatorService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2c7753cdeaedce34",
+      "name": "Incredibuild Endpoint Service",
+      "command": "C:\\Program Files (x86)\\IncrediBuild\\eps\\endpointService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9b2ac8f90b901c90",
+      "name": "Incredibuild LicenseService",
+      "command": "C:\\Program Files (x86)\\IncrediBuild\\LicenseService.exe --_service Incredibuild LicenseService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-203d4a6d8917caeb",
+      "name": "Incredibuild Manager",
+      "command": "C:\\Program Files (x86)\\IncrediBuild\\Manager\\ManagerService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8523319b0a919ee1",
+      "name": "Incredibuild Agent",
+      "command": "C:\\Program Files (x86)\\IncrediBuild\\BuildService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-68e82db92bcf2327",
+      "name": "Microsoft Store Install Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3ec74ec27aafb0ec",
+      "name": "Inventory and Compatibility Appraisal service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k InvSvcGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-daa87fc34f803fb1",
+      "name": "IP Translation Configuration Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9b5747bfd9027792",
+      "name": "CNG Key Isolation",
+      "command": "C:\\Windows\\system32\\lsass.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e16f6e848c6b5e12",
+      "name": "KtmRm for Distributed Transaction Coordinator",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-65cf6c2675e49fcf",
+      "name": "Lenovo Notebook ITS Service",
+      "command": "C:\\Windows\\System32\\LNBITSSvc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-032bf5fea4687e29",
+      "name": "Local Session Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-05274b47c68ef86c",
+      "name": "Server",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-434a9b57c8d46340",
+      "name": "Workstation",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ec4092e8d1a7440b",
+      "name": "Lenovo Fn and function keys service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\lenovofnandfunctionkeys.inf_amd64_5e21bf389d23855a\\LenovoUtilityService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e1c6e8d9033c78d9",
+      "name": "Critical Service for Lenovo Vantage",
+      "command": "C:\\Program Files (x86)\\Lenovo\\VantageService\\\\4.2601.21.0\\LenovoVantageService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-bf903a839c821de1",
+      "name": "Windows License Manager Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f90c4d2d2acbc28a",
+      "name": "Kerberos Local Key Distribution Center",
+      "command": "C:\\Windows\\System32\\lsass.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c1379bbe2c943a14",
+      "name": "Language Experience Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7886267e4a5df066",
+      "name": "Microsoft Defender Core Service",
+      "command": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.26020.6-0\\MpDefenderCoreService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fa952fc36f1d9050",
+      "name": "Distributed Transaction Coordinator",
+      "command": "C:\\Windows\\System32\\msdtc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3af15bba2af9084b",
+      "name": "Microsoft iSCSI Initiator Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-593e292a11ecff74",
+      "name": "Downloaded Maps Manager",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d579e642ce9c12b3",
+      "name": "Mobile Connectivity Management Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k McmSvc -p -s McmSvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-31f9da0e9aad1321",
+      "name": "McpManagementService",
+      "command": "C:\\Windows\\system32\\svchost.exe -k McpManagementServiceGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-12e36c8d4eb58bbc",
+      "name": "MessagingService_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-65adc905441a1388",
+      "name": "Microsoft Edge Elevation Service (MicrosoftEdgeElevationService)",
+      "command": "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\146.0.3856.109\\elevation_service.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-dd8cd035c71d2584",
+      "name": "Microsoft Keyboard Filter",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-882a90ac6d428008",
+      "name": "Now Playing Session Manager Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-42879c4ae3f783db",
+      "name": "Natural Authentication",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ea4095970afbe0f0",
+      "name": "Network Connectivity Assistant",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetSvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9eeee12f0309a767",
+      "name": "Network Connection Broker",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-76138d91375a65d6",
+      "name": "Network Connected Devices Auto-Setup",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNoNetwork -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-786660aa5a44d9f4",
+      "name": "Network Setup Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c87629680023409d",
+      "name": "Net.Tcp Port Sharing Service",
+      "command": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\SMSvcHost.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a605219b5123907f",
+      "name": "Netlogon",
+      "command": "C:\\Windows\\system32\\lsass.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-159283d775294c65",
+      "name": "Network Connections",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-343e94c9029f1053",
+      "name": "Microsoft Passport Container",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-aa25ecd8e47c0bb5",
+      "name": "Microsoft Passport",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-37e99e3b7edc83b5",
+      "name": "Network Location Awareness",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netprofm -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fa22932f9c30b813",
+      "name": "OneDrive Updater Service",
+      "command": "C:\\Program Files\\Microsoft OneDrive\\26.040.0301.0001\\OneDriveUpdaterService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3fde3844697ced7a",
+      "name": "Sync Host_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f2664b2dadcfab02",
+      "name": "P9RdrService_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k P9RdrService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-25b2a005d0dc0a1d",
+      "name": "Microsoft PC Manager Service",
+      "command": "C:\\Program Files\\WindowsApps\\Microsoft.MicrosoftPCManager_3.20.12.0_x64__8wekyb3d8bbwe\\PCManager\\MSPCManagerService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c3332d3f7b8cfbf9",
+      "name": "Program Compatibility Assistant Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e221c8af3939c45e",
+      "name": "BranchCache",
+      "command": "C:\\Windows\\System32\\svchost.exe -k PeerDist",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b11300eafd109fd5",
+      "name": "PenService_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k PenService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a7851306df918dd8",
+      "name": "Performance Counter DLL Host",
+      "command": "C:\\Windows\\SysWow64\\perfhost.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2fb23d1de47f093c",
+      "name": "Phone Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fa6d34ddde2f9eb8",
+      "name": "Contact Data_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e8def737d0aa2c50",
+      "name": "Plug and Play",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5bd23a8af2fa3a1c",
+      "name": "IPsec Policy Agent",
+      "command": "C:\\Windows\\system32\\svchost.exe -k NetworkServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-36ccfe67f689d85a",
+      "name": "Power",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0b9559073c953ab2",
+      "name": "Print Device Configuration Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1c53790fe9a0c6a6",
+      "name": "Printer Extensions and Notifications",
+      "command": "C:\\Windows\\system32\\svchost.exe -k print",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-48d28304631013b6",
+      "name": "PrintScanBrokerService",
+      "command": "C:\\Windows\\system32\\svchost.exe -k PrintScanBrokerService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-103013637a0fc049",
+      "name": "PrintWorkflow_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k PrintWorkflow",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-644687d6bd6264f7",
+      "name": "User Profile Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UserProfileService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-cb49e7c8a06d52d9",
+      "name": "Windows PushToInstall Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-bc65c9c02a21f2b9",
+      "name": "Quality Windows Audio Video Experience",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-514d20ddceb2b1eb",
+      "name": "Remote Access Auto Connection Manager",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-abf8d0e37646d0b6",
+      "name": "Remote Access Connection Manager",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-587e6acd5f91bbe9",
+      "name": "Routing and Remote Access",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fe354a4ba6ea52dc",
+      "name": "Remote Registry",
+      "command": "C:\\Windows\\system32\\svchost.exe -k localService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2a93adad10d87487",
+      "name": "Retail Demo Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k rdxgroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5d5f02140f460143",
+      "name": "Radio Management Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2e638110f306f763",
+      "name": "RPC Endpoint Mapper",
+      "command": "C:\\Windows\\system32\\svchost.exe -k RPCSS -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-feff4e462c5d02bc",
+      "name": "Remote Procedure Call (RPC) Locator",
+      "command": "C:\\Windows\\system32\\locator.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2dbfcd4fedbb5b43",
+      "name": "Remote Procedure Call (RPC)",
+      "command": "C:\\Windows\\system32\\svchost.exe -k rpcss -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d7c2c8f1e6a5c8ac",
+      "name": "Realtek Audio Universal Service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\realtekservice.inf_amd64_26f0df01c9da165d\\RtkAudUService64.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d3fc49500b84f719",
+      "name": "Realtek Bluetooth Device Manager Service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\rtkbtfilter.inf_amd64_d47e6c9ec9c3479f\\RtkBtManServ.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f34f5124b16bdea8",
+      "name": "Smart Card Removal Policy",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7b396e20787a0d89",
+      "name": "Smart Card",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9f53f087dbe83618",
+      "name": "Windows Backup",
+      "command": "C:\\Windows\\system32\\svchost.exe -k SDRSVC",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0a0de0e6e9497dac",
+      "name": "Payments and NFC/SE Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-682706c2141cfd65",
+      "name": "System Event Notification Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcsRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-37d383212e950d04",
+      "name": "SNMP Trap",
+      "command": "C:\\Windows\\System32\\snmptrap.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fff4fd690dc31df1",
+      "name": "SQL Server VSS Writer",
+      "command": "C:\\Program Files\\Microsoft SQL Server\\90\\Shared\\sqlwriter.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9ff776ed3b9fbe26",
+      "name": "SSDP Discovery",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e0c132c0c5fec931",
+      "name": "Security Accounts Manager",
+      "command": "C:\\Windows\\system32\\lsass.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0e7403b43bf09033",
+      "name": "Smart Card Device Enumeration Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-19afd6a8a9aa6cf6",
+      "name": "Task Scheduler",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f3f77fd64b6462d5",
+      "name": "Windows Security Service",
+      "command": "C:\\Windows\\system32\\SecurityHealthService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-026da95aa27c65c2",
+      "name": "Windows Defender Advanced Threat Protection Service",
+      "command": "C:\\Program Files\\Windows Defender Advanced Threat Protection\\MsSense.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-a878ce4bd5a3e83e",
+      "name": "Sensor Data Service",
+      "command": "C:\\Windows\\System32\\SensorDataService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e3ead0194993062c",
+      "name": "Sensor Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f5a1bc570ef6ace3",
+      "name": "Sensor Monitoring Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5feed103bfc075b4",
+      "name": "Remote Desktop Configuration",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-661452fecd3d5668",
+      "name": "Internet Connection Sharing (ICS)",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e0b1238b696f7259",
+      "name": "Shell Hardware Detection",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5311b29984508232",
+      "name": "Microsoft Windows SMS Router Service.",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-fa4679e134c5135e",
+      "name": "Print Spooler",
+      "command": "C:\\Windows\\System32\\spoolsv.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-774a2e0c91236900",
+      "name": "Secure Socket Tunneling Protocol Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e6dd542dd84a6a01",
+      "name": "State Repository Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k appmodel -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-da835781d935981e",
+      "name": "Windows Image Acquisition (WIA)",
+      "command": "C:\\Windows\\system32\\svchost.exe -k imgsvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b56d90297fc053d0",
+      "name": "Storage Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-dc72f0e71d63c184",
+      "name": "SysMain",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1414097778f218a0",
+      "name": "System Events Broker",
+      "command": "C:\\Windows\\system32\\svchost.exe -k DcomLaunch -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e43bde6f07308471",
+      "name": "Telephony",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6f1907ab9bdb5246",
+      "name": "Remote Desktop Services",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e75020001fbb336b",
+      "name": "Text Input Management Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4937215aea66677d",
+      "name": "Themes",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1b65a3f38df724dc",
+      "name": "Storage Tiers Management",
+      "command": "C:\\Windows\\system32\\TieringEngineService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-84388e87d56b292b",
+      "name": "Time Broker",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4357276f7a2c62dd",
+      "name": "Web Account Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-94dad9e1d02eaaa0",
+      "name": "Distributed Link Tracking Client",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b6aac72c363e62f0",
+      "name": "Recommended Troubleshooting Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c5beadbcf15f1fd8",
+      "name": "Windows Modules Installer",
+      "command": "C:\\Windows\\servicing\\TrustedInstaller.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-cd874c835a5a16b1",
+      "name": "Universal Device Client Service",
+      "command": "C:\\Windows\\System32\\drivers\\Lenovo\\udc\\Service\\UDClientService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0741ff8c700a4af2",
+      "name": "Udk User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UdkSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c427e6c484dcdb03",
+      "name": "User Experience Virtualization Service",
+      "command": "C:\\Windows\\system32\\AgentService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-05d17d1bb56ad74e",
+      "name": "Remote Desktop Services UserMode Port Redirector",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-30fd50c81831f419",
+      "name": "User Data Storage_1089ac",
+      "command": "C:\\Windows\\System32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f9f951c040a4d91e",
+      "name": "User Data Access_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-82b51ea43370be0f",
+      "name": "User Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d6cb24eb7aa6ab1b",
+      "name": "Update Orchestrator Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-583e461cbf1c28fe",
+      "name": "VirtualBox system service",
+      "command": "C:\\Program Files\\Oracle\\VirtualBox\\VBoxSDS.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f7472414b619f72b",
+      "name": "Visual Studio Installer Elevation Service",
+      "command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\VSInstallerElevationService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f8fa8e795ff820e6",
+      "name": "Volume Shadow Copy",
+      "command": "C:\\Windows\\system32\\vssvc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0ef1c34f781f9aec",
+      "name": "Visual Studio Standard Collector Service 150",
+      "command": "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\Common\\DiagnosticsHub.Collection.Service\\StandardCollector.Service.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d599f68ac674d2ff",
+      "name": "Credential Manager",
+      "command": "C:\\Windows\\system32\\lsass.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1c0dd6f838f3e9de",
+      "name": "Windows Time",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f9d4517f743fb9f9",
+      "name": "World Wide Web Publishing Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k iissvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e2e5ca0d4bc3160d",
+      "name": "Windows Process Activation Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k iissvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-34dc4bca815d96c0",
+      "name": "Windows Encryption Provider Host Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k WepHostSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-514361c7e1b26285",
+      "name": "Wi-Fi Direct Services Connection Manager Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3f0d33e1a9ce1402",
+      "name": "Windows Media Player Network Sharing Service",
+      "command": "C:\\Program Files\\Windows Media Player\\wmpnetwk.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4d77b9e30fd5e52f",
+      "name": "Windows Management Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-bfdcf0134d6cdf35",
+      "name": "Portable Device Enumerator Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-93efc82d63367e10",
+      "name": "WSAIFabricSvc",
+      "command": "C:\\Windows\\system32\\svchost.exe -k WSAIFabricSvcGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ee201b2ceb56c81a",
+      "name": "WSL Service",
+      "command": "C:\\Program Files\\WSL\\wslservice.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7287100a032c3710",
+      "name": "Windows Search",
+      "command": "C:\\Windows\\system32\\SearchIndexer.exe /Embedding",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9a12cd55899b0195",
+      "name": "Wacom ISD Service",
+      "command": "C:\\Windows\\System32\\DriverStore\\FileRepository\\wtabletserviceisd.inf_amd64_915f627712ed92f8\\WTabletServiceISD.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1fbd71e6e009d0fd",
+      "name": "WaaSMedicSvc",
+      "command": "C:\\Windows\\system32\\svchost.exe -k wusvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-462f4e653670d0b2",
+      "name": "WalletService",
+      "command": "C:\\Windows\\System32\\svchost.exe -k appmodelRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3e732f761a550353",
+      "name": "Warp JIT Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e6bc592818cd68d1",
+      "name": "Windows Biometric Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k WbioSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-465f605b1a5ab49b",
+      "name": "Windows Connection Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p -s Wcmsvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8950abaaa0ff20f6",
+      "name": "Microsoft Defender Antivirus Network Inspection Service",
+      "command": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.26020.6-0\\NisSrv.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4931036abaecd563",
+      "name": "Diagnostic Service Host",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-60010b241b6834a2",
+      "name": "Diagnostic System Host",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-33324afd88c3fa2c",
+      "name": "WebClient",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-232ef7dcda019542",
+      "name": "Windows Event Collector",
+      "command": "C:\\Windows\\system32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-962571035a746207",
+      "name": "Windows Error Reporting Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k WerSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-75dc4f683cdc8d30",
+      "name": "Still Image Acquisition Events",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3ff2f4765f2c617b",
+      "name": "Microsoft Defender Antivirus Service",
+      "command": "C:\\ProgramData\\Microsoft\\Windows Defender\\Platform\\4.18.26020.6-0\\MsMpEng.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d95924e64a0cc0af",
+      "name": "WinHTTP Web Proxy Auto-Discovery Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceHttp -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8534afc68682428d",
+      "name": "Windows Remote Management (WS-Management)",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetworkService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2ed0a446ade95cad",
+      "name": "Windows Management Instrumentation",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-aceb3c7853585d1a",
+      "name": "WLAN AutoConfig",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-91d25dacf7b67eee",
+      "name": "Parental Controls",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ca34a93a21645607",
+      "name": "Windows Push Notifications System Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5fe16ca079fc84e3",
+      "name": "Windows Push Notifications User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k UnistackSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b58f7b7afa586161",
+      "name": "WWAN AutoConfig",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-97cabfba18390aab",
+      "name": "Xbox Live Auth Manager",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcsRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e1ad7248ffda4921",
+      "name": "Xbox Live Game Save",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b34130b6d9d10957",
+      "name": "Xbox Accessory Management Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-39b57b79d8566f15",
+      "name": "Xbox Live Networking Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f5b0da8c5936521a",
+      "name": "YMC",
+      "command": "C:\\Windows\\System32\\YMC.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4706a9aecca66cf5",
+      "name": "AMD PMF Service",
+      "command": "C:\\Windows\\System32\\amdpmfservice.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f57f3a8086a27e7a",
+      "name": "ASP.NET State Service",
+      "command": "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\aspnet_state.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2922713370a85b6e",
+      "name": "Cellular Time",
+      "command": "C:\\Windows\\system32\\svchost.exe -k autoTimeSvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-aab94be569a28d59",
+      "name": "Bluetooth Support Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-bc9a3e56b950bfe1",
+      "name": "Claims to Windows Token Service",
+      "command": "C:\\Program Files\\Windows Identity Foundation\\v3.5\\c2wtshost.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d7a8430759ec75f8",
+      "name": "Capability Access Manager Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k osprivacy -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3215521b69c4e5b0",
+      "name": "Clipboard User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k ClipboardSvcGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d19239912fe74380",
+      "name": "Microsoft Cloud Identity Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k CloudIdServiceGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b9319788153d4fc8",
+      "name": "Docker Desktop Service",
+      "command": "C:\\Program Files\\Docker\\Docker\\com.docker.service",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-71e174972d0e4293",
+      "name": "Declared Configuration(DC) service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-9519b0f059c32f6f",
+      "name": "Optimize drives",
+      "command": "C:\\Windows\\system32\\svchost.exe -k defragsvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-aebf471c99daed7f",
+      "name": "Diagnostic Execution Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k diagnostics",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-88ae545aeaebe288",
+      "name": "Device Management Wireless Application Protocol (WAP) Push message Routing Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-94b5234db5d835b7",
+      "name": "Wired AutoConfig",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2160c696639b14d2",
+      "name": "Microsoft Edge Update Service (edgeupdate)",
+      "command": "C:\\Program Files (x86)\\Microsoft\\EdgeUpdate\\MicrosoftEdgeUpdate.exe /svc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-36c6176795968bc6",
+      "name": "Microsoft Edge Update Service (edgeupdatem)",
+      "command": "C:\\Program Files (x86)\\Microsoft\\EdgeUpdate\\MicrosoftEdgeUpdate.exe /medsvc",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f10bfa6832177c95",
+      "name": "Embedded Mode",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-23a5ebf3d4da8acd",
+      "name": "Function Discovery Provider Host",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-210695d0b4be185e",
+      "name": "File History Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-819abbba377d0ffc",
+      "name": "Group Policy Client",
+      "command": "C:\\Windows\\system32\\svchost.exe -k GPSvcGroup",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6785b2968316d4ad",
+      "name": "Human Interface Device Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7a8228f58db8400f",
+      "name": "Host Network Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k NetSvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-798c3298a0332895",
+      "name": "Hotpatch Monitoring Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-3726b5a7cdf88f53",
+      "name": "Windows Mobile Hotspot Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d3c2846a0b187b85",
+      "name": "IP Helper",
+      "command": "C:\\Windows\\System32\\svchost.exe -k NetSvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-89c4e5d37d4dc346",
+      "name": "Geolocation Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcsRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-560dd3966bd7ecb6",
+      "name": "Link-Layer Topology Discovery Mapper",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-49dd17cde805e6da",
+      "name": "TCP/IP NetBIOS Helper",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4ca6be4e8d59f4de",
+      "name": "Windows MIDI Service",
+      "command": "C:\\Windows\\system32\\midisrv.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4b919958d3178090",
+      "name": "Windows Defender Firewall",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNoNetworkFirewall -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d543f63efcbdf4fb",
+      "name": "Windows Installer",
+      "command": "C:\\Windows\\system32\\msiexec.exe /V",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-383e554c205dc36d",
+      "name": "Network List Service",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netprofm -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5b820df482a6a563",
+      "name": "Network Store Interface Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f93599fe406f50df",
+      "name": "Network Virtualization Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k NetSvcs",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d812c07e099bcaca",
+      "name": "Windows Perception Simulation Service",
+      "command": "C:\\Windows\\system32\\PerceptionSimulation\\PerceptionSimulationService.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5573de78413a2cb8",
+      "name": "Performance Logs & Alerts",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNoNetwork -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ae2b062ff7122dfd",
+      "name": "ReFS Dedup Service",
+      "command": "C:\\Windows\\System32\\ReFsDedupSvc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f9616a7c282dfc44",
+      "name": "Secondary Logon",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1df941722d2f129a",
+      "name": "Shared PC Account Manager",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcsRedirectionGuard -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2e3c6d6c64777499",
+      "name": "Microsoft Storage Spaces SMP",
+      "command": "C:\\Windows\\System32\\svchost.exe -k smphost",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-12e969dd607565b2",
+      "name": "Software Protection",
+      "command": "C:\\Windows\\system32\\sppsvc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d4074eb6ba44f041",
+      "name": "OpenSSH Authentication Agent",
+      "command": "C:\\Windows\\System32\\OpenSSH\\ssh-agent.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4ec74938adc7c898",
+      "name": "Spot Verifier",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-719aef2d2d978f9c",
+      "name": "Microsoft Software Shadow Copy Provider",
+      "command": "C:\\Windows\\System32\\svchost.exe -k swprv",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-8f9d044592a09964",
+      "name": "Auto Time Zone Updater",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-21a7b3f5d22d6c1d",
+      "name": "UPnP Device Host",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-73c652e4da0c6f05",
+      "name": "Virtual Disk",
+      "command": "C:\\Windows\\System32\\vds.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-6452126df7b1f914",
+      "name": "vgc",
+      "command": "C:\\Program Files\\Riot Vanguard\\vgc.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-dc679c98b81d43d9",
+      "name": "Hyper-V Host Compute Service",
+      "command": "C:\\Windows\\system32\\vmcompute.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2c429320da8505e3",
+      "name": "Hyper-V Guest Service Interface",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-92dcd00f1c797481",
+      "name": "Hyper-V Heartbeat Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k ICService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-792752106ecaf441",
+      "name": "Hyper-V Data Exchange Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2b1acd3603f01ef4",
+      "name": "Hyper-V Remote Desktop Virtualization Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k ICService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-ca684bc9ec5a6175",
+      "name": "Hyper-V Guest Shutdown Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-c8a6024c2a3d8022",
+      "name": "Hyper-V Time Synchronization Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-913efea0e02c32cb",
+      "name": "Hyper-V PowerShell Direct Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-379ca9f860a22b9a",
+      "name": "Hyper-V Volume Shadow Copy Requestor",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-e56c1df1102801b2",
+      "name": "Hyper-V Virtual Machine Management",
+      "command": "C:\\Windows\\system32\\vmms.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2b73bba8366c6ec6",
+      "name": "W3C Logging Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k apphost",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-405192209de46c18",
+      "name": "Block Level Backup Engine Service",
+      "command": "C:\\Windows\\system32\\wbengine.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d751c703e8d41c65",
+      "name": "Windows Connect Now - Config Registrar",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceAndNoImpersonation -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1b03511036081977",
+      "name": "Web Threat Defense Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k WebThreatDefense -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-d1819ad97c31f0cd",
+      "name": "Web Threat Defense User Service_1089ac",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalSystemNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-5ee2a3bd644c2ef9",
+      "name": "Problem Reports Control Panel Support",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-0c1032a779b12f73",
+      "name": "Windows Health and Optimized Experiences",
+      "command": "C:\\Windows\\system32\\svchost.exe -k whesvc -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-b39a05a8b1256450",
+      "name": "Windows Insider Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-7eb6b313d851bf24",
+      "name": "Microsoft Account Sign-in Assistant",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-2fd72be45621648e",
+      "name": "Local Profile Assistant Service",
+      "command": "C:\\Windows\\system32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-f2c34c6d6247c22a",
+      "name": "WMI Performance Adapter",
+      "command": "C:\\Windows\\system32\\wbem\\WmiApSrv.exe",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-4bfa057fd27634ac",
+      "name": "Work Folders",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalService -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-28ca5c3c7e58cc98",
+      "name": "Security Center",
+      "command": "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-843f7ede9e659932",
+      "name": "Windows Update",
+      "command": "C:\\Windows\\system32\\svchost.exe -k netsvcs -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "services-1300d765eedb999d",
+      "name": "Microsoft Usage and Quality Insights",
+      "command": "C:\\Windows\\system32\\svchost.exe -k WuqiSvcGroup -p",
+      "source": "Services",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": ""
+      }
+    },
+    {
+      "entry_id": "winlogon-8e292f8511d1c7f8",
+      "name": "Shell",
+      "command": "explorer.exe",
+      "source": "Winlogon",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": "Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"
+      }
+    },
+    {
+      "entry_id": "winlogon-8896585c9a31ad51",
+      "name": "Userinit",
+      "command": "C:\\windows\\system32\\userinit.exe,",
+      "source": "Winlogon",
+      "status": "unknown",
+      "metadata": {
+        "scope": "Machine",
+        "location": "Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"
+      }
+    }
+  ]
+}

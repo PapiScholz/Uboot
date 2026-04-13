@@ -356,7 +356,7 @@ Metadata:
 
         self.details_text.setText(details)
 
-    def _on_filter_entries(self, text: str):
+    def _on_filter_entries(self, text: str = ""):
         """Filter entries by name and source."""
         filter_text = self.name_filter.text().strip().lower()
         source_text = self.source_combo.currentText().strip().lower()
@@ -548,8 +548,8 @@ Metadata:
         QMessageBox.about(
             self,
             "About Uboot",
-            "Uboot v1.0\\n\\n"
-            "Autoruns-style analyzer with AI scoring.\\n"
+            "Uboot v1.0\n\n"
+            "Autoruns-style analyzer with AI scoring.\n"
             "Built with Python, PySide6, and C++17."
         )
 

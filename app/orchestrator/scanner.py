@@ -2,6 +2,7 @@
 import json
 import subprocess
 import sys
+import hashlib
 from pathlib import Path
 from typing import List, Optional
 from dataclasses import dataclass, field
@@ -136,22 +137,98 @@ class Scanner:
 
         # Parse entries
         for entry_json in data.get("entries", []):
+            source = str(entry_json.get("source", ""))
+
+            name = Scanner._pick_first(
+                entry_json,
+                ["name", "displayName", "keyName", "key"],
+                default="(unnamed)"
+            )
+
+            command = Scanner._extract_command(entry_json)
+            status = Scanner._pick_first(
+                entry_json,
+                ["status", "state", "startType"],
+                default="unknown"
+            )
+
+            entry_id = Scanner._pick_first(entry_json, ["entry_id", "id", "guid"], default="")
+            if not entry_id:
+                entry_id = Scanner._build_entry_id(
+                    source=source,
+                    name=name,
+                    command=command,
+                    location=str(entry_json.get("location", "")),
+                    key=str(entry_json.get("key", "")),
+                    scope=str(entry_json.get("scope", "")),
+                )
+
+            metadata = dict(entry_json.get("metadata", {}))
+            for key, value in entry_json.items():
+                if key in {
+                    "entry_id", "id", "guid", "name", "displayName", "keyName", "key",
+                    "command", "imagePath", "arguments", "source", "status", "state", "startType",
+                    "metadata"
+                }:
+                    continue
+                metadata.setdefault(key, value)
+
             entry = Entry(
-                entry_id=entry_json.get("entry_id", "unknown"),
-                name=entry_json.get("name", ""),
-                command=entry_json.get("command", ""),
-                source=entry_json.get("source", ""),
-                status=entry_json.get("status", "unknown"),
-                metadata=entry_json.get("metadata", {})
+                entry_id=entry_id,
+                name=name,
+                command=command,
+                source=source,
+                status=status,
+                metadata=metadata,
             )
             result.entries.append(entry)
 
         # Parse errors
         for error_json in data.get("errors", []):
             error = CollectorError(
-                collector=error_json.get("collector", "unknown"),
-                error=error_json.get("error", "")
+                collector=error_json.get("collector") or error_json.get("source") or "unknown",
+                error=error_json.get("error") or error_json.get("message") or ""
             )
             result.errors.append(error)
 
         return result
+
+    @staticmethod
+    def _pick_first(data: dict, keys: List[str], default: str = "") -> str:
+        """Return the first non-empty string value from candidate keys."""
+        for key in keys:
+            value = data.get(key)
+            if value is None:
+                continue
+            text = str(value).strip()
+            if text:
+                return text
+        return default
+
+    @staticmethod
+    def _extract_command(entry_json: dict) -> str:
+        """Extract executable command from known schema variants."""
+        direct = Scanner._pick_first(entry_json, ["command"], default="")
+        if direct:
+            return direct
+
+        image_path = Scanner._pick_first(entry_json, ["imagePath", "path", "executablePath"], default="")
+        arguments = Scanner._pick_first(entry_json, ["arguments", "args"], default="")
+        if image_path and arguments:
+            return f"{image_path} {arguments}".strip()
+        return image_path
+
+    @staticmethod
+    def _build_entry_id(
+        source: str,
+        name: str,
+        command: str,
+        location: str,
+        key: str,
+        scope: str,
+    ) -> str:
+        """Generate stable entry id when core output does not provide one."""
+        seed = "|".join([source, scope, location, key, name, command])
+        digest = hashlib.sha1(seed.encode("utf-8", errors="ignore")).hexdigest()[:16]
+        source_prefix = source.lower() if source else "entry"
+        return f"{source_prefix}-{digest}"

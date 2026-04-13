@@ -1,5 +1,6 @@
 """Scoring: applies rules and classifies entries."""
 import json
+import re
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field
@@ -41,7 +42,18 @@ class Scorer:
             rules_path: Path to rules_v1.json. If None, searches common locations.
         """
         self.rules_path = rules_path or self._find_rules()
-        self.rules = self._load_rules()
+        self.rules_config = self._load_rules()
+        self.rules = self.rules_config.get("rules", [])
+        self.signal_weights = {
+            signal.get("id", ""): int(signal.get("weight", 0))
+            for signal in self.rules_config.get("signals", [])
+            if signal.get("id")
+        }
+        self.lolbins = {
+            item.lower()
+            for item in self.rules_config.get("lolbins", [])
+            if isinstance(item, str)
+        }
 
     def score(self, entries: List[Entry]) -> List[ScoredEntry]:
         """
@@ -61,15 +73,23 @@ class Scorer:
         signals = []
         rule_matches = []
 
-        # Check against rules
+        # Preferred mode: weighted signals from rules_v1.json (current schema).
+        if self.signal_weights:
+            fired_signals = self._evaluate_signal_ids(entry)
+            for signal_id in fired_signals:
+                score += self.signal_weights.get(signal_id, 0)
+                signals.append(signal_id)
+                rule_matches.append(signal_id)
+
+        # Backward-compatibility mode: legacy explicit rules list.
         for rule in self.rules:
             if self._rule_matches(entry, rule):
-                score += rule.get("weight", 10)
+                score += int(rule.get("weight", 10))
                 signals.extend(rule.get("signals", []))
                 rule_matches.append(rule.get("id", "unknown"))
 
-        # Cap score at 100
-        score = min(score, 100)
+        # Keep score in [0, 100].
+        score = max(0, min(score, 100))
 
         # Determine risk level
         if score <= self.THRESHOLD_CLEAN:
@@ -114,6 +134,129 @@ class Scorer:
 
         return True
 
+    def _evaluate_signal_ids(self, entry: Entry) -> List[str]:
+        """Evaluate built-in signal ids against an entry."""
+        fired: List[str] = []
+
+        command = (entry.command or "").strip()
+        command_l = command.lower()
+        metadata = entry.metadata or {}
+
+        # missing_target
+        if metadata.get("target_exists") is False or metadata.get("file_exists") is False:
+            fired.append("missing_target")
+
+        # unsigned_binary
+        if metadata.get("signed") is False:
+            fired.append("unsigned_binary")
+
+        # invalid_signature
+        if metadata.get("signature_valid") is False:
+            fired.append("invalid_signature")
+        sig_status = str(metadata.get("signature_status", "")).lower()
+        if sig_status and sig_status not in {"valid", "ok", "trusted", "success"}:
+            fired.append("invalid_signature")
+
+        # user_writable_location (common suspicious paths)
+        if any(
+            marker in command_l for marker in [
+                "\\users\\",
+                "\\appdata\\",
+                "\\temp\\",
+                "\\programdata\\",
+                "%appdata%",
+                "%temp%",
+            ]
+        ):
+            fired.append("user_writable_location")
+
+        # lolbin_autorun
+        exe_name = self._extract_executable_name(command_l)
+        if exe_name and exe_name in self.lolbins:
+            fired.append("lolbin_autorun")
+
+        # obfuscated_command
+        if self._looks_obfuscated(command_l):
+            fired.append("obfuscated_command")
+
+        # relative_path
+        if command and self._looks_relative_command(command):
+            fired.append("relative_path")
+
+        # system32_legit_signed (negative weight in rules)
+        publisher = str(metadata.get("publisher", "")).lower()
+        signed = metadata.get("signed") is True or str(metadata.get("signature_status", "")).lower() in {
+            "valid", "ok", "trusted", "success"
+        }
+        if "\\windows\\system32\\" in command_l and signed and "microsoft" in publisher:
+            fired.append("system32_legit_signed")
+
+        # De-duplicate while preserving order
+        seen = set()
+        ordered = []
+        for signal_id in fired:
+            if signal_id in seen:
+                continue
+            seen.add(signal_id)
+            ordered.append(signal_id)
+        return ordered
+
+    @staticmethod
+    def _extract_executable_name(command_l: str) -> str:
+        """Extract executable filename from command line."""
+        if not command_l:
+            return ""
+
+        text = command_l.strip().strip('"')
+        first = text.split()[0] if text.split() else ""
+        if not first:
+            return ""
+        return first.split("\\")[-1]
+
+    @staticmethod
+    def _looks_obfuscated(command_l: str) -> bool:
+        """Detect common obfuscation indicators in command line."""
+        indicators = [
+            " -enc ",
+            " -encodedcommand",
+            "frombase64string(",
+            "iex(",
+            "invoke-expression",
+            "^",
+            "%comspec%",
+        ]
+        if any(token in command_l for token in indicators):
+            return True
+
+        # Long base64-like blobs
+        if re.search(r"[a-z0-9+/]{60,}={0,2}", command_l):
+            return True
+
+        return False
+
+    @staticmethod
+    def _looks_relative_command(command: str) -> bool:
+        """Detect relative executable path patterns."""
+        text = command.strip().strip('"')
+        if not text:
+            return False
+
+        # Absolute Windows paths: C:\... or \\server\share
+        if re.match(r"^[a-zA-Z]:\\", text) or text.startswith("\\\\"):
+            return False
+
+        # Environment variable at start can still be absolute-ish; do not flag hard.
+        if text.startswith("%"):
+            return False
+
+        # Explicit relative markers or bare executable names.
+        if text.startswith(".\\") or text.startswith("..\\"):
+            return True
+
+        first = text.split()[0] if text.split() else text
+        has_dir_separator = "\\" in first or "/" in first
+        return not has_dir_separator
+
     @staticmethod
     def _generate_explanation(entry: Entry, score: int, rule_matches: List[str]) -> str:
         """Generate human-readable explanation of score."""
@@ -146,8 +289,8 @@ class Scorer:
                 return path
         raise FileNotFoundError("rules_v1.json not found")
 
-    def _load_rules(self) -> List[dict]:
+    def _load_rules(self) -> dict:
         """Load and parse rules_v1.json."""
         with open(self.rules_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        return data.get("rules", [])
+        return data

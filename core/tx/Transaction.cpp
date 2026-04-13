@@ -1,5 +1,5 @@
 #include "Transaction.h"
-#include "../../util/GlobalLock.h"
+#include "../util/GlobalLock.h"
 #include "../hardening/SecurityLog.h"
 #include "../ops/OperationFactory.h"
 #include "rapidjson/prettywriter.h"

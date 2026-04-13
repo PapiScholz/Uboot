@@ -1,88 +1,59 @@
 # Contributing to Uboot
 
-Thank you for your interest in contributing to Uboot!
+## Stack
 
-## Development Setup
+| Layer | Language | Toolchain |
+|-------|----------|-----------|
+| Core | C++17 | MSVC v143, CMake ≥ 3.15 |
+| Orchestration / Scoring | Python 3.12+ | venv, pytest |
+| GUI | Python 3.12+ / PySide6 Qt6 | — |
 
-1. **Prerequisites**:
-   - Windows 10 22H2+ (build 19045+)
-   - .NET 8 SDK
-   - Visual Studio 2022 or VS Code with C# DevKit
-   - Administrator privileges for testing
+---
 
-2. **Clone and Build**:
-   ```powershell
-   git clone <repository-url>
-   cd AutorunsMVP
-   .\scripts\build.ps1
-   ```
+## Getting started
 
-3. **Run Tests**:
-   ```powershell
-   dotnet test
-   ```
+```powershell
+git clone https://github.com/<you>/Uboot
+cd Uboot
 
-## Architecture
+# C++ core
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
 
-- **Uboot.Core**: Domain models, interfaces, core services (platform-agnostic)
-- **Uboot.Collectors.Windows**: Windows-specific collectors (registry, services, etc.)
-- **Uboot.Analysis**: Heuristic analysis engine (conservative, evidence-based)
-- **Uboot.Online**: Online services (VirusTotal, WHOIS, DNS) - toggle OFF by default
-- **Uboot.App**: Avalonia UI (MVVM pattern)
-- **Uboot.Cli**: Command-line interface
+# Python
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install PySide6 pytest
+```
 
-## Coding Guidelines
+---
 
-- **C# 12**: Use file-scoped namespaces, top-level statements where appropriate
-- **Nullable**: Enable nullable reference types (`<Nullable>enable</Nullable>`)
-- **Async/Await**: Use for I/O operations
-- **Logging**: Use Serilog for all logging (never Console.WriteLine in libraries)
-- **DI**: Use Microsoft.Extensions.DependencyInjection
+## C++ conventions
 
-## Principles
+- Standard: **C++17**, no extensions (`/std:c++17`)
+- Naming: `PascalCase` for types/files, `camelCase` for members and locals
+- No raw `new`/`delete` — use `std::unique_ptr` / `std::shared_ptr`
+- Error returns via `std::expected` or explicit error structs; no exception-based control flow in collectors
+- Every collector implements `ICollector` from `core/enumerators/ICollector.h`
+- JSON output through `core/json/JsonWriter`; never write to stdout directly from collectors
+- Headers use `#pragma once`
 
-1. **Conservative**: Default to Unknown classification without evidence
-2. **Offline-first**: All online features must be behind toggles (OFF by default)
-3. **Evidence-based**: Never claim definitiveness - provide evidence, let users decide
-4. **Privacy**: No telemetry, no data collection without explicit user consent
-5. **Admin transparency**: Require admin upfront, don't degrade to "read-only"
+---
 
-## Adding a New Collector
+## Python conventions
 
-1. Create class implementing `ICollector` in `Uboot.Collectors.Windows/Collectors/`
-2. Return `List<Entry>` with normalized commands (use `CommandNormalizer`)
-3. Compute hashes/signatures if file paths are available
-4. Register in DI container (`Program.cs`)
-5. Add tests in `AutorunsMvp.Tests`
+- Type hints on all public function signatures
+- Dataclasses for value objects
+- `subprocess.run()` with `check=True` and explicit encoding to invoke `uboot-core.exe`
+- No global mutable state
+- Tests in `tests/` using pytest
 
-## Adding Analysis Rules
+---
 
-Edit `Uboot.Analysis/AnalysisEngine.cs`:
-1. Add new `Evidence` with unique `RuleId`
-2. Assign weight (-1.0 to +1.0)
-3. Provide ES/EN description
-4. Update tests to cover new rule
+## Pull request flow
 
-## Pull Request Process
-
-1. Fork the repository
-2. Create feature branch (`feature/my-new-feature`)
-3. Write tests for new functionality
-4. Ensure all tests pass
-5. Update README if needed
-6. Submit PR with clear description
-
-## Code of Conduct
-
-- Be respectful and professional
-- Focus on technical merit
-- Welcome constructive feedback
-- Keep security in mind (this is a security tool)
-
-## Security
-
-If you discover a security vulnerability, please email [maintainer email] instead of opening a public issue.
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
+1. Branch from `main`: `git checkout -b feat/<name>` or `fix/<name>`
+2. Keep PRs focused — one concern per PR
+3. If the change touches the C++/Python JSON boundary, update `docs/ARCHITECTURE.md`
+4. Run the smoke tests before opening the PR (`pytest tests/`)
+5. ROADMAP.md items completed by the PR should be checked off in the same commit

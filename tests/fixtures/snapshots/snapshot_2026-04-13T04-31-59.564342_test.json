@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-04-13T04:31:59.564342",
+  "entry_count": 1,
+  "metadata": {
+    "label": "test",
+    "schema_version": "1.1",
+    "error_count": 0
+  },
+  "entries": [
+    {
+      "entry_id": "test-entry",
+      "name": "Test",
+      "command": "test.exe",
+      "source": "registry",
+      "status": "active",
+      "metadata": {}
+    }
+  ]
+}

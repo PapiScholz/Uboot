@@ -19,16 +19,10 @@ OperationFactory::CreatefromJson(const rapidjson::Value &obj) {
   if (type == "RegistryRenameValue") {
     std::string keyPath = "";
     std::string valueName = "";
-    if (obj.HasMember("target") && obj["target"].IsString()) {
-      // target might be full path "HKLM\\...\\ValueName"
-      // My implementation of toJson stores "target" as combined string?
-      // Let's check toJson impl in RegistryRenameValueOp.cpp
-      // It stores "key" AND "valueName".
-      if (obj.HasMember("key") && obj["key"].IsString())
-        keyPath = obj["key"].GetString();
-      if (obj.HasMember("valueName") && obj["valueName"].IsString())
-        valueName = obj["valueName"].GetString();
-    }
+    if (obj.HasMember("fullKeyPath") && obj["fullKeyPath"].IsString())
+      keyPath = obj["fullKeyPath"].GetString();
+    if (obj.HasMember("valueName") && obj["valueName"].IsString())
+      valueName = obj["valueName"].GetString();
 
     std::string actionStr = "";
     if (obj.HasMember("action") && obj["action"].IsString())

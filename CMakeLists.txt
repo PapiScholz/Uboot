@@ -65,21 +65,15 @@ set(SOURCES
     core/enumerators/IfeoDebuggerCollector.cpp
 )
 
-# Build Uboot Desktop EXE
-add_executable(Uboot WIN32
-    app/main.cpp
-    app/win32/MainWindow.cpp
-    app/win32/Layout.cpp
-    app/win32/Tabs.cpp
-    app/win32/EntriesListView.cpp
-    app/win32/DetailPane.cpp
-    app/resources/uboot.rc
+# Build uboot-core CLI executable
+add_executable(uboot-core
+    cli/main.cpp
     ${SOURCES}
 )
 
 # Ensure Unicode
-target_compile_definitions(Uboot PRIVATE UNICODE _UNICODE STRICT WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0601)
+target_compile_definitions(uboot-core PRIVATE UNICODE _UNICODE STRICT WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0601)
 
 # Link Windows libraries
-target_link_libraries(Uboot PRIVATE taskschd comsupp shlwapi comctl32)
-target_include_directories(Uboot PRIVATE ${RAPIDJSON_INCLUDE_DIRS})
+target_link_libraries(uboot-core PRIVATE taskschd comsupp shlwapi comctl32)
+target_include_directories(uboot-core PRIVATE ${RAPIDJSON_INCLUDE_DIRS})

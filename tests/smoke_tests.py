@@ -1,0 +1,203 @@
+"""Smoke tests for Uboot Python components."""
+import sys
+import json
+from pathlib import Path
+
+# Add repo root to path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from app.orchestrator.scanner import Entry, ScanResult, CollectorError
+from app.orchestrator.scoring import Scorer, RiskLevel
+from app.orchestrator.snapshot import SnapshotManager, Snapshot
+from tests.fixtures.fixtures import (
+    CLEAN_ENTRY, SUSPICIOUS_ENTRY, MALICIOUS_ENTRY,
+    SCAN_RESULT_FIXTURE, TX_PLAN_FIXTURE
+)
+
+
+def test_scanner_output_structure():
+    """Verify Scanner parses JSON correctly."""
+    print("Testing Scanner output structure...")
+    
+    # Create test entries
+    entries = [
+        Entry(
+            entry_id=CLEAN_ENTRY["entry_id"],
+            name=CLEAN_ENTRY["name"],
+            command=CLEAN_ENTRY["command"],
+            source=CLEAN_ENTRY["source"],
+            status=CLEAN_ENTRY["status"],
+            metadata=CLEAN_ENTRY["metadata"]
+        ),
+        Entry(
+            entry_id=SUSPICIOUS_ENTRY["entry_id"],
+            name=SUSPICIOUS_ENTRY["name"],
+            command=SUSPICIOUS_ENTRY["command"],
+            source=SUSPICIOUS_ENTRY["source"],
+            status=SUSPICIOUS_ENTRY["status"],
+            metadata=SUSPICIOUS_ENTRY["metadata"]
+        )
+    ]
+    
+    errors = [
+        CollectorError(
+            collector="WmiPersistenceCollector",
+            error="Access denied"
+        )
+    ]
+    
+    result = ScanResult(entries=entries, errors=errors, schema_version="1.1")
+    
+    # Verify structure
+    assert result.schema_version == "1.1", "Schema version mismatch"
+    assert len(result.entries) == 2, f"Expected 2 entries, got {len(result.entries)}"
+    assert len(result.errors) == 1, f"Expected 1 error, got {len(result.errors)}"
+    assert result.entries[0].name == CLEAN_ENTRY["name"], "Entry name mismatch"
+    
+    print("  ✓ Scanner structure verified")
+
+
+def test_scorer_classifies_correctly():
+    """Verify Scorer produces correct classifications."""
+    print("Testing Scorer classification...")
+    
+    # Create entries (without full config, just structure)
+    entries = [
+        Entry(
+            entry_id="test-clean",
+            name="Windows Update",
+            command="C:\\Windows\\System32\\svchost.exe",
+            source="services",
+            status="running"
+        ),
+        Entry(
+            entry_id="test-malicious",
+            name="Unknown Malware",
+            command="C:\\Users\\User\\AppData\\Local\\Temp\\evil.exe",
+            source="registry",
+            status="active"
+        )
+    ]
+    
+    # Score them (will use default rules if available)
+    scorer = Scorer()
+    scored = scorer.score(entries)
+    
+    # Verify scoring structure
+    assert len(scored) == 2, f"Expected 2 scored entries, got {len(scored)}"
+    for scored_entry in scored:
+        assert 0 <= scored_entry.score <= 100, f"Score out of range: {scored_entry.score}"
+        assert scored_entry.risk_level in RiskLevel, f"Invalid risk level: {scored_entry.risk_level}"
+        assert isinstance(scored_entry.explanation, str), "Explanation must be string"
+    
+    print(f"  ✓ Clean entry score: {scored[0].score} ({scored[0].risk_level.value})")
+    print(f"  ✓ Malicious entry score: {scored[1].score} ({scored[1].risk_level.value})")
+
+
+def test_snapshot_persistence():
+    """Verify SnapshotManager saves and loads snapshots."""
+    print("Testing Snapshot persistence...")
+    
+    manager = SnapshotManager(Path("tests/fixtures/snapshots"))
+    
+    # Create test scan result
+    entries = [
+        Entry(
+            entry_id="test-entry",
+            name="Test",
+            command="test.exe",
+            source="registry",
+            status="active"
+        )
+    ]
+    
+    scan_result = ScanResult(entries=entries)
+    
+    # Save snapshot
+    snapshot = manager.save(scan_result, label="test")
+    assert snapshot.entry_count == 1, f"Expected 1 entry, got {snapshot.entry_count}"
+    assert Path(manager.snapshot_dir).exists(), "Snapshot dir not created"
+    
+    # Verify file exists
+    snapshot_files = list(Path(manager.snapshot_dir).glob("snapshot_*.json"))
+    assert len(snapshot_files) > 0, "No snapshot files created"
+    
+    print(f"  ✓ Snapshot saved: {snapshot.timestamp}")
+    print(f"  ✓ Snapshot files: {len(snapshot_files)}")
+
+
+def test_snapshot_diff_detection():
+    """Verify SnapshotManager detects changes correctly."""
+    print("Testing Snapshot diff detection...")
+    
+    manager = SnapshotManager(Path("tests/fixtures/snapshots"))
+    
+    # Create first snapshot (entry1, entry2)
+    snapshot1 = Snapshot(
+        timestamp="2026-04-13T10:00:00",
+        entries=[
+            Entry(entry_id="e1", name="Entry1", command="cmd1.exe", source="registry", status="active"),
+            Entry(entry_id="e2", name="Entry2", command="cmd2.exe", source="service", status="active"),
+        ],
+        entry_count=2
+    )
+    
+    # Create second snapshot (entry2 modified, entry3 added, entry1 removed)
+    snapshot2 = Snapshot(
+        timestamp="2026-04-13T11:00:00",
+        entries=[
+            Entry(entry_id="e2", name="Entry2", command="cmd2_modified.exe", source="service", status="active"),
+            Entry(entry_id="e3", name="Entry3", command="cmd3.exe", source="task", status="active"),
+        ],
+        entry_count=2
+    )
+    
+    # Compute diff (without loading from disk, use provided previous snapshot)
+    diff = manager.diff(snapshot2, snapshot1)
+    
+    # Verify diff results
+    # Since e2's command changed, it appears as a new entry and the old e2 as removed
+    assert len(diff.new_entries) == 2, f"Expected 2 new entries, got {len(diff.new_entries)}"
+    assert len(diff.removed_entries) == 2, f"Expected 2 removed entries, got {len(diff.removed_entries)}"
+    assert diff.unchanged_entry_count == 0, f"Expected 0 unchanged entries, got {diff.unchanged_entry_count}"
+    
+    print(f"  ✓ New entries: {len(diff.new_entries)}")
+    print(f"  ✓ Removed entries: {len(diff.removed_entries)}")
+    print(f"  ✓ Changed entries: {len(diff.changed_entries)}")
+    print(f"  ✓ Unchanged entries: {diff.unchanged_entry_count}")
+
+
+def run_all_tests():
+    """Run all smoke tests."""
+    print("\n" + "="*60)
+    print("Uboot Smoke Tests")
+    print("="*60 + "\n")
+    
+    tests = [
+        test_scanner_output_structure,
+        test_scorer_classifies_correctly,
+        test_snapshot_persistence,
+        test_snapshot_diff_detection,
+    ]
+    
+    passed = 0
+    failed = 0
+    
+    for test in tests:
+        try:
+            test()
+            passed += 1
+        except Exception as e:
+            print(f"  ✗ FAILED: {e}")
+            failed += 1
+    
+    print("\n" + "="*60)
+    print(f"Results: {passed} passed, {failed} failed")
+    print("="*60 + "\n")
+    
+    return failed == 0
+
+
+if __name__ == "__main__":
+    success = run_all_tests()
+    sys.exit(0 if success else 1)

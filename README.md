@@ -1,3 +1,116 @@
-# Build
-cmake --build . --config Release
+# Uboot
+
+Windows persistence auditor with explainable scoring, forensic evidence, and reversible remediation.
+
+Think Sysinternals Autoruns — but with a risk score on every entry, cryptographic evidence capture, and a one-click undo for any change it makes.
+
+---
+
+## What it does
+
+1. **Scan** — collects all autostart entries across the most common persistence vectors (Run keys, Services, Scheduled Tasks, Startup folder, Winlogon, WMI subscriptions, IFEO debugger hijacks).
+2. **Score** — assigns every entry a risk classification (clean / suspicious / malicious) with an explanation derived from rule-based signals: publisher, signing, path anomalies, known-good list.
+3. **Evidence** — captures SHA-256 hash, Authenticode signature, version info, and file metadata for each entry before touching anything.
+4. **Remediate** — proposes a reversible action plan, requires explicit confirmation, executes it transactionally, and writes a snapshot you can undo from.
+
+---
+
+## Architecture
+
 ```
+┌───────────────────────────── GUI (PySide6 / Qt6) ────────────────────────────────┐
+│  main.py  ·  views/  ·  widgets/                                                 │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   │  Python calls / QThread
+┌──────────────────────────────────▼───────────────────────────────────────────────┐
+│  Orchestrator (Python 3.12+)                                                     │
+│  scanner.py · evidence.py · scoring.py · remediation.py · snapshot.py            │
+└──────────────────────────────────┬───────────────────────────────────────────────┘
+                                   │  subprocess JSON  (stdout / stdin)
+┌──────────────────────────────────▼───────────────────────────────────────────────┐
+│  uboot-core.exe  (C++17)                                                         │
+│  cli/main.cpp · enumerators/ · evidence/ · tx/ · backup/ · ops/                  │
+└──────────────────────────────────────────────────────────────────────────────────┘
+```
+
+The C++ core runs as a subprocess and communicates via newline-delimited JSON on stdout.  
+The Python layer orchestrates, scores, diffs, and drives the GUI.  
+No COM bindings, no P/Invoke — the boundary is a plain process call.
+
+---
+
+## Prerequisites
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| MSVC | VS 2022 (v143) | C++17, x64 |
+| CMake | ≥ 3.15 | |
+| Python | ≥ 3.12 | 64-bit |
+| PySide6 | ≥ 6.7 | `pip install PySide6` |
+
+---
+
+## Build
+
+```powershell
+# C++ core
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+cmake --build build --config Release
+# binary: build/bin/Release/uboot-core.exe
+
+# Python dependencies
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install PySide6
+
+# Run GUI
+python -m app.main
+```
+
+---
+
+## Project layout
+
+```
+app/
+  main.py                  GUI entry point (PySide6)
+  orchestrator/            Python orchestration layer
+    scanner.py
+    evidence.py
+    scoring.py
+    remediation.py
+    snapshot.py
+cli/
+  main.cpp                 C++ entry point (JSON CLI)
+core/
+  enumerators/             7 Windows persistence collectors
+  evidence/                SHA-256, Authenticode, version info
+  backup/                  Pre-remediation snapshots
+  tx/                      ACID transaction layer
+  ops/                     Correctional operations (Registry, Service, Task)
+  runner/                  CollectorRunner orchestration
+  util/                    CLI args, locks, command resolver
+  normalize/               Command path normalization
+  resolve/                 .lnk resolver
+  json/                    JSON writer
+  hardening/               Policy inspector, security log, dependency analysis
+  model/                   Shared data types (Entry, CollectorError)
+docs/
+  ARCHITECTURE.md
+rules/
+  rules_v1.json            Signal definitions for scoring
+tests/
+  fixtures/                Reference JSONs (clean, suspicious, malicious)
+```
+
+---
+
+## Status
+
+See [ROADMAP.md](ROADMAP.md) for the current implementation plan and progress.
+
+---
+
+## License
+
+See [LICENSE](LICENSE).

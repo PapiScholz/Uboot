@@ -25,7 +25,7 @@ std::string getCurrentUtcTimestamp() {
 #endif
 
   std::ostringstream oss;
-  oss << std::put_time(&tm_now, "%Y%m%d%H%wbr%S");
+  oss << std::put_time(&tm_now, "%Y%m%d%H%M%S");
   return oss.str();
 }
 } // namespace

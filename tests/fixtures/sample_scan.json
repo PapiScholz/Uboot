@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.1",
+  "entries": [
+    {
+      "entry_id": "reg-001",
+      "name": "Suspicious Startup",
+      "command": "C:\\temp\\malware.exe",
+      "source": "registry::HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run",
+      "status": "active",
+      "metadata": {
+        "created": "2026-04-12T10:30:00Z",
+        "last_modified": "2026-04-12T10:30:00Z"
+      }
+    },
+    {
+      "entry_id": "svc-001",
+      "name": "Windows Update",
+      "command": "C:\\Windows\\System32\\svchost.exe -k netsvcs",
+      "source": "services",
+      "status": "running",
+      "metadata": {
+        "service_type": "win32_share_process",
+        "start_type": "automatic"
+      }
+    }
+  ],
+  "errors": []
+}

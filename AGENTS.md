@@ -7,6 +7,10 @@
 - Mantener `.gitignore` actualizado y limpiar artefactos generados antes de validar entregables o marcar hitos.
 - Verificar el entorno Python y dependencias antes de depurar errores de importación o tipado.
 - Marcar los hitos del roadmap apenas se validen, no dejarlo para el final, para facilitar el tracking y evitar confusión.
+- Cada vez que se complete y valide una task o step del roadmap en esta sesión, actualizar `ROADMAP.md` en el mismo turno y marcarlo como completado; si quedó parcial, desdoblarlo o anotarlo explícitamente en vez de dejar un estado ambiguo.
+- No marcar una task del roadmap como completada si falta una dependencia operativa crítica para usarla de verdad (por ejemplo runtime, modelo, binario externo, credenciales o instalación requerida). En esos casos, dejarla pendiente o dividirla en substeps explícitos.
+- Para integración LLM en Windows con releases actuales de `llama.cpp`, preferir `llama-completion.exe` para invocación no interactiva; `llama-cli.exe` puede caer a modo chat y no aceptar bien `--no-conversation`.
+- Para validación operativa del advisor local, probar con un GGUF realmente liviano (`Q4_K_M`) antes de concluir que el flujo falla por lógica; `Q8_0` puede invalidar el sizing y falsear timeouts.
 
 
 ## Execution Checklist for This Repo

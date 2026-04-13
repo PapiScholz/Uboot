@@ -16,6 +16,9 @@ class AppSettings:
     llm_mode_configured: bool = False
     llm_component_status: str = "unknown"
     llm_component_error: str = ""
+    llm_installed_runtime_version: str = ""
+    llm_fast_installed: bool = False
+    llm_better_installed: bool = False
 
 
 class SettingsStore:
@@ -52,6 +55,9 @@ class SettingsStore:
             llm_mode_configured=bool(data.get("llm_mode_configured", False)),
             llm_component_status=str(data.get("llm_component_status", "unknown")),
             llm_component_error=str(data.get("llm_component_error", "")),
+            llm_installed_runtime_version=str(data.get("llm_installed_runtime_version", "")),
+            llm_fast_installed=bool(data.get("llm_fast_installed", False)),
+            llm_better_installed=bool(data.get("llm_better_installed", False)),
         )
 
     def save(self, settings: AppSettings) -> None:
@@ -61,4 +67,3 @@ class SettingsStore:
             json.dumps(asdict(settings), indent=2),
             encoding="utf-8",
         )
-

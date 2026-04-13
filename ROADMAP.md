@@ -77,8 +77,9 @@
 
 - [ ] Más persistence points (AppInit DLLs, COM hijacking, Boot execute, PowerShell profiles)
 - [ ] Diff en background (watchdog notifica nuevas entradas)
-- [ ] Advisor LLM local para explicación de evidencia y recomendación de remediación
-- [ ] Export forense: reporte HTML/PDF con timeline, evidencia, hashes
-- [ ] Multi-scan / timeline visual
+- [x] Advisor LLM local para explicación de evidencia y recomendación de remediación
+- [x] Export forense: reporte HTML con timeline, evidencia, hashes y advisory
+- [ ] Export forense: PDF derivado del HTML
+- [x] Multi-scan / timeline visual
 - [ ] Capacidades online opcionales (VirusTotal, WHOIS — toggle OFF por defecto)
 - [ ] Suite integration: Uboot como módulo con launcher compartido

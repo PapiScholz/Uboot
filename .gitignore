@@ -54,6 +54,8 @@ snapshots/
 tests/fixtures/snapshots/
 llm/runtime/
 llm/models/
+llm/cache/
+llm/manifest.json
 
 # VS Code — keep only tasks and settings
 .vscode/*

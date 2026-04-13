@@ -44,6 +44,7 @@ from app.orchestrator import (
     HtmlReportGenerator,
     LlmAdvice,
     LlmAdvisor,
+    LlmInstallResult,
     LlmMode,
     Remediation,
     Scanner,
@@ -120,6 +121,30 @@ class LlmAdvisorWorker(QThread):
             self.error.emit(str(exc))
 
 
+class LlmInstallWorker(QThread):
+    """Background worker for downloading and installing local AI components."""
+
+    progress = Signal(str, int)
+    finished = Signal(object)
+    error = Signal(str)
+
+    def __init__(self, advisor: LlmAdvisor, mode: LlmMode):
+        super().__init__()
+        self.advisor = advisor
+        self.mode = mode
+
+    def run(self):
+        """Install the local runtime and model for the selected mode."""
+        try:
+            result = self.advisor.ensure_component(self.mode, progress=self._emit_progress)
+            self.finished.emit(result)
+        except Exception as exc:
+            self.error.emit(str(exc))
+
+    def _emit_progress(self, message: str, percent: int):
+        self.progress.emit(message, percent)
+
+
 class LlmModeDialog(QDialog):
     """Short global LLM selection dialog shown from Get Evidence."""
 
@@ -137,18 +162,22 @@ class LlmModeDialog(QDialog):
         intro.setWordWrap(True)
         layout.addWidget(intro)
 
+        fast_profile = advisor.get_profile(LlmMode.FAST)
+        better_profile = advisor.get_profile(LlmMode.BETTER)
         info = QLabel(
             "Off\n"
             "Solo heurística local, sin asistencia LLM.\n\n"
             "Fast\n"
-            "Menor consumo, respuesta más rápida, calidad más conservadora.\n\n"
+            f"{fast_profile.benefit_summary}\n"
+            f"Hardware: {fast_profile.minimum_ram} / {fast_profile.recommended_ram}\n"
+            f"Impact: {fast_profile.estimated_ram} | {fast_profile.estimated_latency}\n"
+            f"Download: {fast_profile.download_size}\n\n"
             "Better\n"
-            "Mejor justificación y mejor recomendación, con mayor costo de recursos.\n\n"
-            f"Fast: {advisor.get_profile(LlmMode.FAST).estimated_ram} · "
-            f"{advisor.get_profile(LlmMode.FAST).estimated_latency}\n"
-            f"Better: {advisor.get_profile(LlmMode.BETTER).estimated_ram} · "
-            f"{advisor.get_profile(LlmMode.BETTER).estimated_latency}\n\n"
-            "The optional local component may require a separate install or download."
+            f"{better_profile.benefit_summary}\n"
+            f"Hardware: {better_profile.minimum_ram} / {better_profile.recommended_ram}\n"
+            f"Impact: {better_profile.estimated_ram} | {better_profile.estimated_latency}\n"
+            f"Download: {better_profile.download_size}\n\n"
+            "If the component is missing, Uboot will download and link it automatically in the background."
         )
         info.setWordWrap(True)
         layout.addWidget(info)
@@ -183,6 +212,63 @@ class LlmModeDialog(QDialog):
     def remember_choice(self) -> bool:
         """Return whether the choice should be persisted."""
         return self.remember_checkbox.isChecked()
+
+
+class LlmPreparationDialog(QDialog):
+    """Non-modal banner/dialog shown while the local AI component is being prepared."""
+
+    def __init__(self, advisor: LlmAdvisor, mode: LlmMode, parent=None):
+        super().__init__(parent)
+        profile = advisor.get_profile(mode)
+        status = advisor.component_status(mode)
+
+        self.setWindowTitle(f"Preparing {profile.display_name} Local AI")
+        self.setModal(False)
+        self.resize(560, 280)
+
+        layout = QVBoxLayout(self)
+        summary = QLabel(
+            f"<strong>{profile.display_name}</strong><br>"
+            f"{profile.benefit_summary}<br><br>"
+            f"Minimum RAM: {profile.minimum_ram}<br>"
+            f"Recommended RAM: {profile.recommended_ram}<br>"
+            f"Expected latency: {profile.estimated_latency}<br>"
+            f"Estimated extra RAM: {profile.estimated_ram}<br>"
+            f"Estimated download: {status['estimated_download'] or profile.download_size}<br><br>"
+            "Recommendations remain assisted. Uboot will not execute remediation automatically."
+        )
+        summary.setWordWrap(True)
+        layout.addWidget(summary)
+
+        self.progress_label = QLabel("Preparing local AI component...")
+        layout.addWidget(self.progress_label)
+
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setRange(0, 100)
+        self.progress_bar.setValue(0)
+        layout.addWidget(self.progress_bar)
+
+        self.detail_label = QLabel("")
+        self.detail_label.setWordWrap(True)
+        layout.addWidget(self.detail_label)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.accepted.connect(self.close)
+        buttons.rejected.connect(self.close)
+        layout.addWidget(buttons)
+
+    def update_progress(self, message: str, percent: int):
+        self.progress_label.setText(message)
+        self.progress_bar.setValue(max(0, min(percent, 100)))
+
+    def mark_ready(self, runtime_path: Path, model_path: Path):
+        self.progress_label.setText("Local AI component ready.")
+        self.progress_bar.setValue(100)
+        self.detail_label.setText(f"Runtime: {runtime_path}\nModel: {model_path}")
+
+    def mark_error(self, message: str):
+        self.progress_label.setText("Local AI component failed to install.")
+        self.detail_label.setText(message)
 
 
 class SnapshotTimelineDialog(QDialog):
@@ -291,18 +377,24 @@ class MainWindow(QMainWindow):
         self.current_evidence = None
         self.current_advice: Optional[LlmAdvice] = None
         self.pending_llm_row_id: Optional[str] = None
+        self.pending_advice_request: Optional[Tuple[str, object, LlmMode]] = None
         self.evidence_cache: Dict[str, object] = {}
         self.advice_cache: Dict[Tuple[str, str], LlmAdvice] = {}
         self.session_llm_mode: Optional[LlmMode] = None
         self.llm_mode = self._load_configured_llm_mode()
         self.llm_mode_is_configured = bool(self.app_settings.llm_mode_configured)
         self._updating_llm_actions = False
+        self.llm_install_worker: Optional[LlmInstallWorker] = None
+        self.llm_install_mode: Optional[LlmMode] = None
+        self.queued_install_mode: Optional[LlmMode] = None
+        self.llm_prep_dialog: Optional[LlmPreparationDialog] = None
 
         self._setup_menu()
         self._setup_toolbar()
         self._setup_central_widget()
         self._setup_status_bar()
         self._connect_signals()
+        self._sync_llm_component_settings()
 
     def _setup_menu(self):
         """Setup menu bar."""
@@ -438,6 +530,13 @@ class MainWindow(QMainWindow):
         self.advisor_text.setReadOnly(True)
         self.advisor_text.setMaximumHeight(260)
         right_layout.addWidget(self.advisor_text)
+        self.advisor_progress_label = QLabel("")
+        self.advisor_progress_label.setVisible(False)
+        right_layout.addWidget(self.advisor_progress_label)
+        self.advisor_progress_bar = QProgressBar()
+        self.advisor_progress_bar.setVisible(False)
+        self.advisor_progress_bar.setRange(0, 100)
+        right_layout.addWidget(self.advisor_progress_bar)
         self._reset_advisor_panel()
 
         right_layout.addWidget(QLabel("Actions"))
@@ -485,10 +584,99 @@ class MainWindow(QMainWindow):
     def _persist_settings(self):
         self.settings_store.save(self.app_settings)
 
+    def _sync_llm_component_settings(self):
+        fast_status = self.llm_advisor.component_status(LlmMode.FAST)
+        better_status = self.llm_advisor.component_status(LlmMode.BETTER)
+        self.app_settings.llm_fast_installed = bool(fast_status["model_installed"])
+        self.app_settings.llm_better_installed = bool(better_status["model_installed"])
+        runtime_ready = bool(fast_status["runtime_installed"] or better_status["runtime_installed"])
+        self.app_settings.llm_installed_runtime_version = (
+            self.llm_advisor.installer.runtime_version if runtime_ready else ""
+        )
+        effective_mode = self._effective_llm_mode()
+        if effective_mode == LlmMode.OFF:
+            self.app_settings.llm_component_status = "unknown"
+            self.app_settings.llm_component_error = ""
+        else:
+            status = self.llm_advisor.component_status(effective_mode)
+            self.app_settings.llm_component_status = status["status"]
+            self.app_settings.llm_component_error = "" if status["available"] else status["message"]
+        self._persist_settings()
+
+    def _set_advisor_progress(self, visible: bool, message: str = "", percent: int = 0):
+        self.advisor_progress_label.setVisible(visible)
+        self.advisor_progress_bar.setVisible(visible)
+        if visible:
+            self.advisor_progress_label.setText(message)
+            self.advisor_progress_bar.setValue(max(0, min(percent, 100)))
+
+    def _show_llm_preparation_dialog(self, mode: LlmMode):
+        if self.llm_prep_dialog is None or self.llm_install_mode != mode:
+            if self.llm_prep_dialog is not None:
+                self.llm_prep_dialog.close()
+            self.llm_prep_dialog = LlmPreparationDialog(self.llm_advisor, mode, self)
+        self.llm_prep_dialog.show()
+        self.llm_prep_dialog.raise_()
+        self.llm_prep_dialog.activateWindow()
+
+    def _start_llm_install(self, mode: LlmMode):
+        self.llm_install_mode = mode
+        self.llm_install_worker = LlmInstallWorker(self.llm_advisor, mode)
+        self.llm_install_worker.progress.connect(self._on_llm_install_progress)
+        self.llm_install_worker.finished.connect(self._on_llm_install_finished)
+        self.llm_install_worker.error.connect(self._on_llm_install_error)
+        self.llm_install_worker.start()
+
+    def _ensure_llm_component(
+        self,
+        mode: LlmMode,
+        pending_request: Optional[Tuple[str, object, LlmMode]] = None,
+        show_banner: bool = True,
+    ) -> bool:
+        status = self.llm_advisor.component_status(mode)
+        if status["available"]:
+            self.app_settings.llm_component_status = "installed"
+            self.app_settings.llm_component_error = ""
+            self._sync_llm_component_settings()
+            return True
+
+        if pending_request is not None:
+            self.pending_advice_request = pending_request
+
+        if self.llm_install_worker is not None and self.llm_install_worker.isRunning():
+            if self.llm_install_mode != mode:
+                self.queued_install_mode = mode
+            self.app_settings.llm_component_status = "installing"
+            self.app_settings.llm_component_error = ""
+            self._persist_settings()
+            self._set_advisor_progress(True, "Preparing local AI component...", 5)
+            self.advisor_text.setHtml(
+                f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
+                "<p>Heuristic evidence remains available while the optional component installs.</p>"
+            )
+            if show_banner:
+                self._show_llm_preparation_dialog(mode)
+            return False
+
+        self.app_settings.llm_component_status = "installing"
+        self.app_settings.llm_component_error = ""
+        self._persist_settings()
+        self._set_advisor_progress(True, "Preparing local AI component...", 0)
+        self.advisor_text.setHtml(
+            f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
+            "<p>Heuristic evidence remains available while the optional component installs.</p>"
+        )
+        if show_banner:
+            self._show_llm_preparation_dialog(mode)
+        self.statusBar().showMessage(f"Preparing {mode.value.capitalize()} local AI component...")
+        self._start_llm_install(mode)
+        return False
+
     def _sync_llm_menu_actions(self):
         self._updating_llm_actions = True
+        selected_mode = self._effective_llm_mode()
         for mode, action in self.llm_actions.items():
-            action.setChecked(mode == self.llm_mode)
+            action.setChecked(mode == selected_mode)
         self._updating_llm_actions = False
 
     def _effective_llm_mode(self) -> LlmMode:
@@ -591,7 +779,7 @@ class MainWindow(QMainWindow):
         self._sync_llm_menu_actions()
         self._reset_advisor_panel()
         if user_initiated and mode != LlmMode.OFF:
-            self._offer_missing_component(mode)
+            self._ensure_llm_component(mode, show_banner=True)
         if user_initiated:
             self.statusBar().showMessage(f"LLM Assistance: {mode.value.capitalize()}")
 
@@ -610,6 +798,7 @@ class MainWindow(QMainWindow):
         return selected_mode
 
     def _reset_advisor_panel(self):
+        self._set_advisor_progress(False)
         if not self.llm_mode_is_configured and self.session_llm_mode is None:
             self.advisor_text.setHtml(
                 "<p>Configure <strong>LLM Assistance</strong> from the menu or when you use Get Evidence.</p>"
@@ -629,21 +818,19 @@ class MainWindow(QMainWindow):
                 f"<p><strong>{mode.value.capitalize()}</strong> mode ready.</p>"
                 "<p>Use Get Evidence to request local advisory.</p>"
             )
+        elif self.app_settings.llm_component_status == "installing":
+            self.advisor_text.setHtml(
+                f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
+                "<p>Heuristic evidence remains available while the optional component installs.</p>"
+            )
+            self._set_advisor_progress(True, "Preparing local AI component...", 5)
         else:
             self.advisor_text.setHtml(
-                f"<p><strong>{mode.value.capitalize()}</strong> mode selected, but the optional component is missing.</p>"
+                f"<p><strong>{mode.value.capitalize()}</strong> mode selected, but the optional component is not ready.</p>"
+                f"<p>Status: {self._escape_html(status['status'])}</p>"
+                f"<p>Estimated download: {self._escape_html(status['estimated_download'])}</p>"
                 f"<pre>{self.llm_advisor.install_instructions(mode)}</pre>"
             )
-
-    def _offer_missing_component(self, mode: LlmMode) -> bool:
-        status = self.llm_advisor.component_status(mode)
-        self.app_settings.llm_component_status = status["status"]
-        self.app_settings.llm_component_error = "" if status["available"] else status["message"]
-        self._persist_settings()
-        if status["available"]:
-            return True
-        QMessageBox.information(self, "Optional Local AI Component", self.llm_advisor.install_instructions(mode))
-        return False
 
     def _on_start_scan(self, sources: List[str]):
         self.statusBar().showMessage("Scanning...")
@@ -833,6 +1020,14 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             self._render_advice(cached)
             return
 
+        if self.app_settings.llm_component_status == "installing" and self._effective_llm_mode() != LlmMode.OFF:
+            self.advisor_text.setHtml(
+                "<p><strong>Preparing local AI component...</strong></p>"
+                "<p>Heuristic evidence remains available while the download completes.</p>"
+            )
+            self._set_advisor_progress(True, "Preparing local AI component...", 5)
+            return
+
         self._reset_advisor_panel()
 
     def _render_advice(self, advice: LlmAdvice):
@@ -949,14 +1144,20 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             self.statusBar().showMessage("Loaded cached local advisory")
             return
 
-        if not self._offer_missing_component(mode):
+        if not self._ensure_llm_component(
+            mode,
+            pending_request=(row_ctx.row_id, evidence, mode),
+            show_banner=True,
+        ):
             self.advisor_text.setHtml(
-                f"<p><strong>{mode.value.capitalize()}</strong> mode selected, but the optional component is not installed.</p>"
-                "<p>Continuing with heuristic evidence only.</p>"
+                f"<p><strong>{mode.value.capitalize()}</strong> mode is being prepared.</p>"
+                "<p>Continuing with heuristic evidence while the optional component installs.</p>"
             )
+            self._set_advisor_progress(True, "Preparing local AI component...", 5)
             return
 
         self.advisor_text.setHtml("<p>Loading local advisory...</p>")
+        self._set_advisor_progress(False)
         self._start_llm_advisory_worker(row_ctx, evidence, mode)
 
     def _start_llm_advisory_worker(self, row_ctx: RowContext, evidence, mode: LlmMode):
@@ -973,6 +1174,62 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.llm_worker.error.connect(self._on_llm_advice_error)
         self.llm_worker.start()
 
+    def _on_llm_install_progress(self, message: str, percent: int):
+        self._set_advisor_progress(True, message, percent)
+        self.statusBar().showMessage(message)
+        if self.llm_prep_dialog is not None:
+            self.llm_prep_dialog.update_progress(message, percent)
+
+    def _on_llm_install_finished(self, result: LlmInstallResult):
+        self.app_settings.llm_component_status = "installed"
+        self.app_settings.llm_component_error = ""
+        self._sync_llm_component_settings()
+        self._set_advisor_progress(False)
+        if self.llm_prep_dialog is not None:
+            self.llm_prep_dialog.mark_ready(result.runtime_path, result.model_path)
+        self.statusBar().showMessage(f"{result.mode.value.capitalize()} local AI component ready")
+
+        pending = self.pending_advice_request
+        if pending and pending[2] == result.mode:
+            self.pending_advice_request = None
+        self.llm_install_worker = None
+        completed_mode = self.llm_install_mode
+        self.llm_install_mode = None
+
+        if pending and pending[2] == result.mode:
+            row_ctx = self._current_row_context()
+            if row_ctx is not None and row_ctx.row_id == pending[0]:
+                self.advisor_text.setHtml("<p>Loading local advisory...</p>")
+                self._start_llm_advisory_worker(row_ctx, pending[1], result.mode)
+            else:
+                self._reset_advisor_panel()
+        else:
+            self._reset_advisor_panel()
+
+        if self.queued_install_mode and self.queued_install_mode != completed_mode:
+            next_mode = self.queued_install_mode
+            self.queued_install_mode = None
+            if not self.llm_advisor.component_status(next_mode)["available"]:
+                self._ensure_llm_component(next_mode, show_banner=True)
+
+    def _on_llm_install_error(self, message: str):
+        self.app_settings.llm_component_status = "error"
+        self.app_settings.llm_component_error = message
+        self._persist_settings()
+        self._set_advisor_progress(False)
+        if self.llm_prep_dialog is not None:
+            self.llm_prep_dialog.mark_error(message)
+        self.llm_install_worker = None
+        self.llm_install_mode = None
+        self.queued_install_mode = None
+        self.pending_advice_request = None
+        self.advisor_text.setHtml(
+            "<p><strong>LLM component install failed.</strong></p>"
+            "<p>Falling back to heuristic evidence.</p>"
+            f"<pre>{self._escape_html(message)}</pre>"
+        )
+        self.statusBar().showMessage("Local AI component install failed; using heuristics")
+
     def _on_llm_advice_ready(self, advice: LlmAdvice):
         row_ctx = self._current_row_context()
         if row_ctx is None or (self.pending_llm_row_id and self.pending_llm_row_id != row_ctx.row_id):
@@ -983,7 +1240,8 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.advice_cache[(entry_id, self._effective_llm_mode().value)] = advice
         self.app_settings.llm_component_status = "installed"
         self.app_settings.llm_component_error = ""
-        self._persist_settings()
+        self._sync_llm_component_settings()
+        self._set_advisor_progress(False)
         self._render_advice(advice)
         self.statusBar().showMessage("Local advisory ready")
 
@@ -995,6 +1253,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.app_settings.llm_component_error = message
         self.pending_llm_row_id = None
         self._persist_settings()
+        self._set_advisor_progress(False)
         self.advisor_text.setHtml(
             "<p><strong>LLM advisory unavailable.</strong></p>"
             "<p>Falling back to heuristic evidence.</p>"
@@ -1010,6 +1269,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.app_settings.llm_component_error = message
         self.pending_llm_row_id = None
         self._persist_settings()
+        self._set_advisor_progress(False)
         self.advisor_text.setHtml(
             "<p><strong>LLM advisory failed.</strong></p>"
             "<p>Falling back to heuristic evidence.</p>"

@@ -1,6 +1,9 @@
 """Smoke tests for Uboot Python components."""
 import sys
 import json
+import hashlib
+import os
+import zipfile
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
@@ -18,6 +21,14 @@ from tests.fixtures.fixtures import (
     CLEAN_ENTRY, SUSPICIOUS_ENTRY, MALICIOUS_ENTRY,
     SCAN_RESULT_FIXTURE, TX_PLAN_FIXTURE
 )
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def test_scanner_output_structure():
@@ -363,6 +374,9 @@ def test_settings_persistence():
             llm_mode_configured=True,
             llm_component_status="installed",
             llm_component_error="",
+            llm_installed_runtime_version="b8779",
+            llm_fast_installed=True,
+            llm_better_installed=True,
         )
 
         store.save(expected)
@@ -371,8 +385,74 @@ def test_settings_persistence():
         assert loaded.llm_mode == "better"
         assert loaded.llm_mode_configured is True
         assert loaded.llm_component_status == "installed"
+        assert loaded.llm_installed_runtime_version == "b8779"
+        assert loaded.llm_fast_installed is True
+        assert loaded.llm_better_installed is True
 
     print("  ✓ Settings persistence verified")
+
+
+def test_llm_component_installation_flow():
+    """Verify local AI components install from URLs, persist, and upgrade by mode."""
+    print("Testing local AI component installation flow...")
+
+    with TemporaryDirectory() as temp_dir:
+        temp_root = Path(temp_dir)
+        downloads_dir = temp_root / "downloads"
+        downloads_dir.mkdir(parents=True, exist_ok=True)
+
+        runtime_zip = downloads_dir / "llama-runtime.zip"
+        with zipfile.ZipFile(runtime_zip, "w") as archive:
+            archive.writestr("llama-bin/llama-completion.exe", "fake-llama-completion")
+            archive.writestr("llama-bin/llama-cli.exe", "fake-llama-cli")
+            archive.writestr("llama-bin/ggml-base.dll", "fake-dll")
+
+        fast_model = downloads_dir / "qwen3-0.6b-q4_k_m.gguf"
+        fast_model.write_text("fast-model", encoding="utf-8")
+        better_model = downloads_dir / "qwen3-1.7b-q4_k_m.gguf"
+        better_model.write_text("better-model", encoding="utf-8")
+
+        env_updates = {
+            "UBOOT_LLAMA_RUNTIME_URL": runtime_zip.resolve().as_uri(),
+            "UBOOT_LLAMA_RUNTIME_SHA256": _sha256_file(runtime_zip),
+            "UBOOT_LLAMA_RUNTIME_VERSION": "test-runtime",
+            "UBOOT_LLM_FAST_MODEL_URL": fast_model.resolve().as_uri(),
+            "UBOOT_LLM_FAST_MODEL_SHA256": _sha256_file(fast_model),
+            "UBOOT_LLM_FAST_MODEL_VERSION": "test-fast",
+            "UBOOT_LLM_FAST_MODEL_BYTES": str(fast_model.stat().st_size),
+            "UBOOT_LLM_BETTER_MODEL_URL": better_model.resolve().as_uri(),
+            "UBOOT_LLM_BETTER_MODEL_SHA256": _sha256_file(better_model),
+            "UBOOT_LLM_BETTER_MODEL_VERSION": "test-better",
+            "UBOOT_LLM_BETTER_MODEL_BYTES": str(better_model.stat().st_size),
+        }
+        previous_values = {key: os.environ.get(key) for key in env_updates}
+        os.environ.update(env_updates)
+        try:
+            advisor = LlmAdvisor(component_root=temp_root / "llm")
+            fast_result = advisor.ensure_component(LlmMode.FAST)
+            fast_status = advisor.component_status(LlmMode.FAST)
+            better_status_before = advisor.component_status(LlmMode.BETTER)
+
+            assert fast_result.runtime_path.exists(), "Runtime was not installed"
+            assert fast_result.model_path.exists(), "Fast model was not installed"
+            assert fast_status["available"] is True
+            assert better_status_before["status"] in {"missing", "partial"}
+            assert (advisor.component_root / "manifest.json").exists(), "Manifest missing"
+
+            better_result = advisor.ensure_component(LlmMode.BETTER)
+            better_status = advisor.component_status(LlmMode.BETTER)
+
+            assert better_result.model_path.exists(), "Better model was not installed"
+            assert better_status["available"] is True
+            assert (advisor.component_root / "runtime" / "ggml-base.dll").exists(), "Runtime DLL missing"
+        finally:
+            for key, value in previous_values.items():
+                if value is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = value
+
+    print("  ✓ Local AI component installation verified")
 
 
 def test_html_report_generation():
@@ -428,6 +508,7 @@ def run_all_tests():
         test_scorer_classifies_correctly,
         test_llm_advisor_payload_and_validation,
         test_settings_persistence,
+        test_llm_component_installation_flow,
         test_snapshot_persistence,
         test_snapshot_listing_and_loading,
         test_snapshot_diff_detection,

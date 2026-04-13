@@ -3,13 +3,14 @@ import sys
 import json
 from pathlib import Path
 from typing import Optional, List
+from datetime import datetime
 
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QTableWidget, QTableWidgetItem, QLabel, QPushButton,
     QMenu, QMenuBar, QToolBar, QTextEdit, QComboBox, QLineEdit,
     QDialog, QDialogButtonBox, QMessageBox, QProgressBar, QStatusBar,
-    QFileDialog, QInputDialog, QSizePolicy
+    QFileDialog, QInputDialog, QSizePolicy, QAbstractItemView
 )
 from PySide6.QtCore import Qt, QThread, Signal, QTimer
 from PySide6.QtGui import QColor, QIcon
@@ -26,7 +27,7 @@ class ScanWorker(QThread):
     finished = Signal(ScanResult)
     error = Signal(str)
 
-    def __init__(self, scanner: Scanner, sources: List[str] = None):
+    def __init__(self, scanner: Scanner, sources: Optional[List[str]] = None):
         super().__init__()
         self.scanner = scanner
         self.sources = sources or ["all"]
@@ -93,7 +94,7 @@ class MainWindow(QMainWindow):
         full_scan_action.triggered.connect(lambda: self._on_start_scan(["all"]))
         
         registry_scan_action = scan_menu.addAction("&Registry Only")
-        registry_scan_action.triggered.connect(lambda: self._on_start_scan(["registry"]))
+        registry_scan_action.triggered.connect(lambda: self._on_start_scan(["RunRegistry"]))
 
         # Remediation menu
         remediation_menu = menubar.addMenu("&Remediation")
@@ -145,7 +146,7 @@ class MainWindow(QMainWindow):
         toolbar.addWidget(remove_btn)
 
         spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         toolbar.addWidget(spacer)
 
     def _setup_central_widget(self):
@@ -165,12 +166,16 @@ class MainWindow(QMainWindow):
         self.entries_table.setHorizontalHeaderLabels(
             ["Name", "Score", "Risk", "Source", "Signed"]
         )
+        self.entries_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.entries_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.entries_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.entries_table.setColumnWidth(0, 250)
         self.entries_table.setColumnWidth(1, 60)
         self.entries_table.setColumnWidth(2, 100)
         self.entries_table.setColumnWidth(3, 150)
         self.entries_table.setColumnWidth(4, 60)
         self.entries_table.itemSelectionChanged.connect(self._on_entry_selected)
+        self.entries_table.cellClicked.connect(lambda *_: self._on_entry_selected())
         
         left_layout.addWidget(self.entries_table)
 
@@ -183,6 +188,7 @@ class MainWindow(QMainWindow):
         self.details_text = QTextEdit()
         self.details_text.setReadOnly(True)
         self.details_text.setMaximumHeight(400)
+        self.details_text.setText("Select an entry to view summary. Use Details for full context and Get Evidence for forensic output.")
         right_layout.addWidget(self.details_text)
 
         # Middle: action buttons
@@ -220,7 +226,7 @@ class MainWindow(QMainWindow):
         right_widget = QWidget()
         right_widget.setLayout(right_layout)
 
-        splitter = QSplitter(Qt.Horizontal)
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(left_widget)
         splitter.addWidget(right_widget)
         splitter.setStretchFactor(0, 1)
@@ -274,6 +280,8 @@ class MainWindow(QMainWindow):
 
     def _populate_entries_table(self):
         """Populate entries table with scored entries."""
+        self.entries_table.clearSelection()
+        self.selected_entry_id = None
         self.entries_table.setRowCount(len(self.scored_entries))
 
         for row, scored_entry in enumerate(self.scored_entries):
@@ -285,12 +293,12 @@ class MainWindow(QMainWindow):
 
             # Score
             score_item = QTableWidgetItem(str(scored_entry.score))
-            score_item.setTextAlignment(Qt.AlignCenter)
+            score_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.entries_table.setItem(row, 1, score_item)
 
             # Risk level with color
             risk_item = QTableWidgetItem(scored_entry.risk_level.value)
-            risk_item.setTextAlignment(Qt.AlignCenter)
+            risk_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             
             # Color by risk level
             if scored_entry.risk_level == RiskLevel.MALICIOUS:
@@ -306,32 +314,50 @@ class MainWindow(QMainWindow):
             source_item = QTableWidgetItem(entry.source)
             self.entries_table.setItem(row, 3, source_item)
 
-            # Signed (placeholder)
-            signed_item = QTableWidgetItem("?")
+            # Signed
+            signed_item = QTableWidgetItem(self._format_signed_status(entry))
+            signed_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            if signed_item.text() == "Yes":
+                signed_item.setForeground(QColor("green"))
+            elif signed_item.text() in {"No", "Invalid", "Missing"}:
+                signed_item.setForeground(QColor("orange"))
+            else:
+                signed_item.setForeground(QColor("gray"))
             self.entries_table.setItem(row, 4, signed_item)
+
+    @staticmethod
+    def _format_signed_status(entry) -> str:
+        """Render the signature state for a table row."""
+        metadata = entry.metadata or {}
+        signature_status = str(metadata.get("signature_status", "")).strip().lower()
+        signed = metadata.get("signed")
+
+        if signed is True or signature_status in {"valid", "ok", "trusted", "success"}:
+            return "Yes"
+        if signature_status == "missingfile":
+            return "Missing"
+        if signed is False and signature_status and signature_status not in {"notsigned", "unsigned"}:
+            return "Invalid"
+        if signed is False:
+            return "No"
+        return "Unknown"
 
     def _on_entry_selected(self):
         """Handle entry selection."""
-        selected_rows = self.entries_table.selectionModel().selectedRows()
-        if selected_rows:
-            row = selected_rows[0].row()
-            if row < len(self.scored_entries):
-                self.selected_entry_id = self.scored_entries[row].entry.entry_id
-                self._update_details_panel()
+        row = self.entries_table.currentRow()
+        if row < 0:
+            selected_items = self.entries_table.selectedItems()
+            row = selected_items[0].row() if selected_items else -1
 
-    def _update_details_panel(self):
-        """Update details panel for selected entry."""
-        if not self.selected_entry_id:
-            return
+        if 0 <= row < len(self.scored_entries):
+            self.selected_entry_id = self.scored_entries[row].entry.entry_id
+            self._update_details_panel()
+        else:
+            self.selected_entry_id = None
 
-        # Find scored entry
-        scored_entry = next(
-            (e for e in self.scored_entries if e.entry.entry_id == self.selected_entry_id),
-            None
-        )
-        if not scored_entry:
-            return
-
+    @staticmethod
+    def _build_details_text(scored_entry: ScoredEntry, include_metadata: bool = True) -> str:
+        """Build details text for an entry."""
         entry = scored_entry.entry
         details = f"""
 Entry: {entry.name}
@@ -349,12 +375,27 @@ Signals ({len(scored_entry.signals)}):
 
 Rule Matches ({len(scored_entry.rule_matches)}):
   {', '.join(scored_entry.rule_matches) if scored_entry.rule_matches else '(none)'}
-
-Metadata:
-{json.dumps(entry.metadata, indent=2)}
         """.strip()
 
-        self.details_text.setText(details)
+        if include_metadata:
+            details += "\n\nMetadata:\n" + json.dumps(entry.metadata, indent=2)
+
+        return details
+
+    def _update_details_panel(self, include_metadata: bool = False):
+        """Update details panel for selected entry."""
+        if not self.selected_entry_id:
+            return
+
+        # Find scored entry
+        scored_entry = next(
+            (e for e in self.scored_entries if e.entry.entry_id == self.selected_entry_id),
+            None
+        )
+        if not scored_entry:
+            return
+
+        self.details_text.setText(self._build_details_text(scored_entry, include_metadata=include_metadata))
 
     def _on_filter_entries(self, text: str = ""):
         """Filter entries by name and source."""
@@ -375,6 +416,12 @@ Metadata:
 
             self.entries_table.setRowHidden(row, not (name_matches and source_matches))
 
+        current_row = self.entries_table.currentRow()
+        if current_row >= 0 and self.entries_table.isRowHidden(current_row):
+            self.entries_table.clearSelection()
+            self.selected_entry_id = None
+            self.details_text.setText("Select an entry to view summary. Use Details for full context and Get Evidence for forensic output.")
+
     def _selected_scored_entry(self) -> Optional[ScoredEntry]:
         """Return currently selected scored entry."""
         if not self.selected_entry_id:
@@ -387,26 +434,91 @@ Metadata:
 
     def _on_show_details(self):
         """Show details for selected entry."""
-        self._update_details_panel()
+        self._on_entry_selected()
+        if not self.selected_entry_id:
+            QMessageBox.information(self, "No Selection", "Select a row in the table first.")
+            return
+
+        scored_entry = self._selected_scored_entry()
+        if not scored_entry:
+            QMessageBox.information(self, "No Selection", "Select a valid row in the table first.")
+            return
+
+        self._update_details_panel(include_metadata=True)
+
+        details_dialog = QDialog(self)
+        details_dialog.setWindowTitle("Entry Details")
+        details_dialog.resize(900, 650)
+
+        layout = QVBoxLayout(details_dialog)
+        details_view = QTextEdit()
+        details_view.setReadOnly(True)
+        details_view.setText(self._build_details_text(scored_entry, include_metadata=True))
+        layout.addWidget(details_view)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(details_dialog.accept)
+        layout.addWidget(buttons)
+
+        details_dialog.exec()
 
     def _on_get_evidence(self):
         """Get detailed evidence for selected entry."""
+        self._on_entry_selected()
         if not self.selected_entry_id:
             QMessageBox.warning(self, "No Selection", "Please select an entry first.")
             return
 
+        scored_entry = self._selected_scored_entry()
+        if not scored_entry:
+            QMessageBox.warning(self, "No Selection", "Please select a valid entry first.")
+            return
+
         try:
-            evidence = self.evidence_gatherer.get_evidence(self.selected_entry_id)
+            evidence = self.evidence_gatherer.get_evidence(scored_entry.entry)
         except Exception as e:
             QMessageBox.critical(self, "Evidence Error", str(e))
             return
 
+        scored_entry.entry.metadata.update(evidence.to_metadata_updates())
+        current_row = self.entries_table.currentRow()
+        if current_row >= 0:
+            signed_item = self.entries_table.item(current_row, 4)
+            if signed_item is not None:
+                signed_item.setText(self._format_signed_status(scored_entry.entry))
+
+        self._update_details_panel(include_metadata=False)
+
         pretty = json.dumps(evidence.raw_evidence or {}, indent=2)
-        self.details_text.append("\n\n=== Evidence ===\n" + pretty)
+
+        evidence_dialog = QDialog(self)
+        evidence_dialog.setWindowTitle("Evidence Output")
+        evidence_dialog.resize(1000, 700)
+
+        layout = QVBoxLayout(evidence_dialog)
+
+        header = QLabel(
+            f"Entry ID: {self.selected_entry_id}\\n"
+            f"Collected: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        )
+        layout.addWidget(header)
+
+        evidence_view = QTextEdit()
+        evidence_view.setReadOnly(True)
+        evidence_view.setText(pretty)
+        layout.addWidget(evidence_view)
+
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        buttons.accepted.connect(evidence_dialog.accept)
+        layout.addWidget(buttons)
+
+        evidence_dialog.exec()
+
         self.statusBar().showMessage(f"Evidence loaded for {self.selected_entry_id}")
 
     def _on_plan_remediation(self):
         """Plan remediation for selected entry."""
+        self._on_entry_selected()
         if not self.selected_entry_id:
             QMessageBox.warning(self, "No Selection", "Please select an entry first.")
             return
@@ -471,7 +583,7 @@ Metadata:
             "Confirm Apply",
             f"Apply remediation transaction {tx_id}?"
         )
-        if confirm != QMessageBox.Yes:
+        if confirm != QMessageBox.StandardButton.Yes:
             return
 
         try:
@@ -503,7 +615,7 @@ Metadata:
             "Confirm Undo",
             f"Undo remediation transaction {tx_id}?"
         )
-        if confirm != QMessageBox.Yes:
+        if confirm != QMessageBox.StandardButton.Yes:
             return
 
         try:

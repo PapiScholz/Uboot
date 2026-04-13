@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .scanner import Entry, ScanResult
 
@@ -52,7 +52,7 @@ class SnapshotManager:
         Returns:
             Snapshot object that was saved
         """
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         snapshot = Snapshot(
             timestamp=timestamp,
             entries=scan_result.entries,

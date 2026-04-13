@@ -14,6 +14,7 @@ class Entry:
     entry_id: str
     name: str
     command: str
+    image_path: str
     source: str
     status: str = "unknown"
     metadata: dict = field(default_factory=dict)
@@ -145,6 +146,7 @@ class Scanner:
                 default="(unnamed)"
             )
 
+            image_path = Scanner._extract_image_path(entry_json)
             command = Scanner._extract_command(entry_json)
             status = Scanner._pick_first(
                 entry_json,
@@ -177,6 +179,7 @@ class Scanner:
                 entry_id=entry_id,
                 name=name,
                 command=command,
+                image_path=image_path,
                 source=source,
                 status=status,
                 metadata=metadata,
@@ -212,11 +215,16 @@ class Scanner:
         if direct:
             return direct
 
-        image_path = Scanner._pick_first(entry_json, ["imagePath", "path", "executablePath"], default="")
+        image_path = Scanner._extract_image_path(entry_json)
         arguments = Scanner._pick_first(entry_json, ["arguments", "args"], default="")
         if image_path and arguments:
             return f"{image_path} {arguments}".strip()
         return image_path
+
+    @staticmethod
+    def _extract_image_path(entry_json: dict) -> str:
+        """Extract resolved executable path from known schema variants."""
+        return Scanner._pick_first(entry_json, ["imagePath", "path", "executablePath"], default="")
 
     @staticmethod
     def _build_entry_id(

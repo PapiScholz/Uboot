@@ -50,6 +50,8 @@ dist/
 *.tmp
 *~
 elevated_smoke_result.json
+snapshots/
+tests/fixtures/snapshots/
 
 # VS Code — keep only tasks and settings
 .vscode/*

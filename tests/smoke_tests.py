@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 from app.orchestrator.scanner import Entry, ScanResult, CollectorError, Scanner
+from app.orchestrator.evidence import EntryEvidence
 from app.orchestrator.scoring import Scorer, RiskLevel
 from app.orchestrator.snapshot import SnapshotManager, Snapshot
 from tests.fixtures.fixtures import (
@@ -25,6 +26,7 @@ def test_scanner_output_structure():
             entry_id=CLEAN_ENTRY["entry_id"],
             name=CLEAN_ENTRY["name"],
             command=CLEAN_ENTRY["command"],
+            image_path="C:\\Windows\\System32\\svchost.exe",
             source=CLEAN_ENTRY["source"],
             status=CLEAN_ENTRY["status"],
             metadata=CLEAN_ENTRY["metadata"]
@@ -33,6 +35,7 @@ def test_scanner_output_structure():
             entry_id=SUSPICIOUS_ENTRY["entry_id"],
             name=SUSPICIOUS_ENTRY["name"],
             command=SUSPICIOUS_ENTRY["command"],
+            image_path="C:\\Users\\Admin\\AppData\\Local\\Temp\\mystery.exe",
             source=SUSPICIOUS_ENTRY["source"],
             status=SUSPICIOUS_ENTRY["status"],
             metadata=SUSPICIOUS_ENTRY["metadata"]
@@ -67,6 +70,7 @@ def test_scorer_classifies_correctly():
             entry_id="test-clean",
             name="Windows Update",
             command="C:\\Windows\\System32\\svchost.exe",
+            image_path="C:\\Windows\\System32\\svchost.exe",
             source="services",
             status="running"
         ),
@@ -74,6 +78,7 @@ def test_scorer_classifies_correctly():
             entry_id="test-malicious",
             name="Unknown Malware",
             command="C:\\Users\\User\\AppData\\Local\\Temp\\evil.exe",
+            image_path="C:\\Users\\User\\AppData\\Local\\Temp\\evil.exe",
             source="registry",
             status="active"
         )
@@ -127,12 +132,39 @@ def test_scanner_parses_core_schema_variant():
     assert len(result.entries) == 2
     assert result.entries[0].name == "Riot Vanguard"
     assert result.entries[0].command == "C:\\Program Files\\Riot Vanguard\\vgtray.exe"
+    assert result.entries[0].image_path == "C:\\Program Files\\Riot Vanguard\\vgtray.exe"
     assert result.entries[0].entry_id != "unknown"
     assert result.entries[1].name == "Aggregated Data Platform Service"
     assert "svchost.exe" in result.entries[1].command
     assert "LocalServiceAndNoImpersonation" in result.entries[1].command
 
     print("  ✓ Core schema variant parsed correctly")
+
+
+def test_evidence_metadata_updates():
+    """Verify evidence maps Authenticode results into scoring metadata."""
+    print("Testing evidence metadata mapping...")
+
+    evidence = EntryEvidence(
+        entry_id="test-entry",
+        file_info={"exists": True},
+        authenticode={
+            "signed": True,
+            "status": "Valid",
+            "signer_subject": "CN=Microsoft Windows, O=Microsoft Corporation"
+        }
+    )
+
+    updates = evidence.to_metadata_updates()
+
+    assert updates["file_exists"] is True
+    assert updates["target_exists"] is True
+    assert updates["signed"] is True
+    assert updates["signature_status"] == "Valid"
+    assert updates["signature_valid"] is True
+    assert "Microsoft Corporation" in updates["publisher"]
+
+    print("  ✓ Evidence metadata mapping verified")
 
 
 def test_snapshot_persistence():
@@ -147,6 +179,7 @@ def test_snapshot_persistence():
             entry_id="test-entry",
             name="Test",
             command="test.exe",
+            image_path="test.exe",
             source="registry",
             status="active"
         )
@@ -177,8 +210,8 @@ def test_snapshot_diff_detection():
     snapshot1 = Snapshot(
         timestamp="2026-04-13T10:00:00",
         entries=[
-            Entry(entry_id="e1", name="Entry1", command="cmd1.exe", source="registry", status="active"),
-            Entry(entry_id="e2", name="Entry2", command="cmd2.exe", source="service", status="active"),
+            Entry(entry_id="e1", name="Entry1", command="cmd1.exe", image_path="cmd1.exe", source="registry", status="active"),
+            Entry(entry_id="e2", name="Entry2", command="cmd2.exe", image_path="cmd2.exe", source="service", status="active"),
         ],
         entry_count=2
     )
@@ -187,8 +220,8 @@ def test_snapshot_diff_detection():
     snapshot2 = Snapshot(
         timestamp="2026-04-13T11:00:00",
         entries=[
-            Entry(entry_id="e2", name="Entry2", command="cmd2_modified.exe", source="service", status="active"),
-            Entry(entry_id="e3", name="Entry3", command="cmd3.exe", source="task", status="active"),
+            Entry(entry_id="e2", name="Entry2", command="cmd2_modified.exe", image_path="cmd2_modified.exe", source="service", status="active"),
+            Entry(entry_id="e3", name="Entry3", command="cmd3.exe", image_path="cmd3.exe", source="task", status="active"),
         ],
         entry_count=2
     )
@@ -217,6 +250,7 @@ def run_all_tests():
     tests = [
         test_scanner_output_structure,
         test_scanner_parses_core_schema_variant,
+        test_evidence_metadata_updates,
         test_scorer_classifies_correctly,
         test_snapshot_persistence,
         test_snapshot_diff_detection,

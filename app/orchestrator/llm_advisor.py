@@ -64,6 +64,19 @@ class LlmAdvice:
     confidence: str
     raw_response: Dict[str, Any] = field(default_factory=dict)
 
+    def to_display_sections(self) -> Dict[str, Any]:
+        """Return GUI/report-friendly structured sections."""
+        return {
+            "summary": self.summary,
+            "assessment": self.assessment,
+            "recommended_action": self.recommended_action,
+            "secondary_action": self.secondary_action or "none",
+            "confidence": self.confidence,
+            "false_positive_risk": self.false_positive_risk,
+            "evidence": list(self.evidence),
+            "justification": self.justification,
+        }
+
 
 class LlmAdvisorError(RuntimeError):
     """Base error for local advisor failures."""
@@ -247,7 +260,9 @@ class LlmAdvisor:
             profile=self.get_profile(mode),
         )
         data = self._extract_json(response)
-        return self.validate_response(data)
+        advice = self.validate_response(data)
+        self._enforce_policy(payload, advice)
+        return advice
 
     def validate_response(self, data: Dict[str, Any]) -> LlmAdvice:
         """Validate and normalize the LLM contract."""
@@ -302,6 +317,25 @@ class LlmAdvisor:
             confidence=confidence,
             raw_response=data,
         )
+
+    @staticmethod
+    def _enforce_policy(payload: Dict[str, Any], advice: LlmAdvice) -> None:
+        """Reject advice that violates product safety expectations."""
+        score = int(payload.get("score", 0))
+        risk_level = str(payload.get("risk_level", "")).strip().lower()
+        if advice.recommended_action == "delete":
+            if score < 70 or risk_level != "malicious" or advice.confidence != "high":
+                raise AdviceValidationError(
+                    "Delete recommendation rejected due to insufficient evidence strength"
+                )
+        if risk_level == "clean" and advice.recommended_action in {
+            "delete",
+            "disable",
+            "quarantine_candidate",
+        }:
+            raise AdviceValidationError(
+                "Destructive recommendation rejected for clean heuristic classification"
+            )
 
     def _resolve_cli_path(self) -> Optional[Path]:
         override = os.environ.get("UBOOT_LLAMACPP_CLI", "").strip()

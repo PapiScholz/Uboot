@@ -5,6 +5,7 @@ from .scoring import Scorer
 from .remediation import Remediation
 from .snapshot import SnapshotManager
 from .llm_advisor import LlmAdvisor, LlmMode, LlmAdvice
+from .reporting import HtmlReportGenerator, ForensicReportData, ForensicEntryRecord
 
 __all__ = [
     "Scanner",
@@ -15,4 +16,7 @@ __all__ = [
     "LlmAdvisor",
     "LlmMode",
     "LlmAdvice",
+    "HtmlReportGenerator",
+    "ForensicReportData",
+    "ForensicEntryRecord",
 ]

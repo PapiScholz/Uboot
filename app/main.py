@@ -1,39 +1,75 @@
 """Uboot GUI main application."""
-import sys
-import json
-from typing import Optional, List
-from datetime import datetime
+from __future__ import annotations
 
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QSplitter, QTableWidget, QTableWidgetItem, QLabel, QPushButton,
-    QTextEdit, QComboBox, QLineEdit,
-    QDialog, QDialogButtonBox, QMessageBox, QProgressBar, QStatusBar,
-    QFileDialog, QInputDialog, QSizePolicy, QAbstractItemView, QCheckBox,
-    QRadioButton, QButtonGroup
-)
+import json
+import sys
+from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+
 from PySide6.QtCore import Qt, QThread, Signal
-from PySide6.QtGui import QColor, QActionGroup
+from PySide6.QtGui import QActionGroup, QColor
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QButtonGroup,
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QFileDialog,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QProgressBar,
+    QPushButton,
+    QRadioButton,
+    QSizePolicy,
+    QSplitter,
+    QTableWidget,
+    QTableWidgetItem,
+    QTextEdit,
+    QVBoxLayout,
+    QWidget,
+)
 
 from app.orchestrator import (
-    Scanner,
-    Scorer,
     Evidence,
-    Remediation,
-    SnapshotManager,
+    ForensicEntryRecord,
+    ForensicReportData,
+    HtmlReportGenerator,
+    LlmAdvice,
     LlmAdvisor,
     LlmMode,
-    LlmAdvice,
+    Remediation,
+    Scanner,
+    Scorer,
+    SnapshotManager,
 )
-from app.orchestrator.scanner import ScanResult
-from app.orchestrator.scoring import ScoredEntry, RiskLevel
 from app.orchestrator.llm_advisor import ComponentUnavailableError
+from app.orchestrator.scanner import Entry, ScanResult
+from app.orchestrator.scoring import RiskLevel, ScoredEntry
+from app.orchestrator.snapshot import Snapshot, SnapshotDiff, SnapshotEntryChange, SnapshotSummary
 from app.settings import SettingsStore
+
+
+@dataclass
+class RowContext:
+    """A visible table row backed by a scored entry and optional diff metadata."""
+
+    row_id: str
+    scored_entry: ScoredEntry
+    kind: str = "current"
+    change: Optional[SnapshotEntryChange] = None
 
 
 class ScanWorker(QThread):
     """Background worker for scanning."""
-    
+
     progress = Signal(str)
     finished = Signal(ScanResult)
     error = Signal(str)
@@ -49,8 +85,8 @@ class ScanWorker(QThread):
             self.progress.emit("Starting scan...")
             result = self.scanner.scan(self.sources)
             self.finished.emit(result)
-        except Exception as e:
-            self.error.emit(f"Scan failed: {str(e)}")
+        except Exception as exc:
+            self.error.emit(f"Scan failed: {exc}")
 
 
 class LlmAdvisorWorker(QThread):
@@ -60,7 +96,7 @@ class LlmAdvisorWorker(QThread):
     unavailable = Signal(str)
     error = Signal(str)
 
-    def __init__(self, advisor: LlmAdvisor, entry, scored_entry, evidence, mode: LlmMode):
+    def __init__(self, advisor: LlmAdvisor, entry: Entry, scored_entry: ScoredEntry, evidence, mode: LlmMode):
         super().__init__()
         self.advisor = advisor
         self.entry = entry
@@ -122,12 +158,9 @@ class LlmModeDialog(QDialog):
         self.fast_radio = QRadioButton("Fast")
         self.better_radio = QRadioButton("Better")
         self.off_radio.setChecked(True)
-        self.button_group.addButton(self.off_radio)
-        self.button_group.addButton(self.fast_radio)
-        self.button_group.addButton(self.better_radio)
-        layout.addWidget(self.off_radio)
-        layout.addWidget(self.fast_radio)
-        layout.addWidget(self.better_radio)
+        for radio in (self.off_radio, self.fast_radio, self.better_radio):
+            self.button_group.addButton(radio)
+            layout.addWidget(radio)
 
         self.remember_checkbox = QCheckBox("Remember this choice")
         layout.addWidget(self.remember_checkbox)
@@ -152,15 +185,90 @@ class LlmModeDialog(QDialog):
         return self.remember_checkbox.isChecked()
 
 
+class SnapshotTimelineDialog(QDialog):
+    """Modal timeline/history view for snapshot browsing and diff selection."""
+
+    def __init__(self, snapshots: List[SnapshotSummary], parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Snapshots / Timeline")
+        self.resize(840, 520)
+        self.snapshots = snapshots
+        self.selected_action: Optional[str] = None
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("Available snapshots"))
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(4)
+        self.table.setHorizontalHeaderLabels(["Timestamp", "Label", "Entries", "Errors"])
+        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table.setRowCount(len(snapshots))
+        for row, item in enumerate(snapshots):
+            self.table.setItem(row, 0, QTableWidgetItem(item.timestamp))
+            self.table.setItem(row, 1, QTableWidgetItem(item.label or "(none)"))
+            self.table.setItem(row, 2, QTableWidgetItem(str(item.entry_count)))
+            self.table.setItem(row, 3, QTableWidgetItem(str(item.error_count)))
+        self.table.itemSelectionChanged.connect(self._sync_from_table)
+        layout.addWidget(self.table)
+
+        selectors = QHBoxLayout()
+        selectors.addWidget(QLabel("Current:"))
+        self.current_combo = QComboBox()
+        selectors.addWidget(self.current_combo)
+        selectors.addWidget(QLabel("Previous:"))
+        self.previous_combo = QComboBox()
+        selectors.addWidget(self.previous_combo)
+        layout.addLayout(selectors)
+
+        for snapshot in snapshots:
+            label = f"{snapshot.timestamp} | {snapshot.label or 'snapshot'}"
+            self.current_combo.addItem(label, snapshot.path)
+            self.previous_combo.addItem(label, snapshot.path)
+
+        buttons = QDialogButtonBox()
+        self.open_button = buttons.addButton("Open Snapshot", QDialogButtonBox.ButtonRole.AcceptRole)
+        self.compare_button = buttons.addButton("Compare Snapshots", QDialogButtonBox.ButtonRole.ActionRole)
+        self.cancel_button = buttons.addButton(QDialogButtonBox.StandardButton.Cancel)
+        self.open_button.clicked.connect(self._accept_open)
+        self.compare_button.clicked.connect(self._accept_compare)
+        self.cancel_button.clicked.connect(self.reject)
+        layout.addWidget(buttons)
+
+        if snapshots:
+            self.table.selectRow(0)
+            self.previous_combo.setCurrentIndex(min(1, len(snapshots) - 1))
+
+    def _sync_from_table(self):
+        row = self.table.currentRow()
+        if row >= 0:
+            self.current_combo.setCurrentIndex(row)
+
+    def _accept_open(self):
+        self.selected_action = "open"
+        self.accept()
+
+    def _accept_compare(self):
+        self.selected_action = "compare"
+        self.accept()
+
+    def selection(self) -> Optional[Tuple[str, Path, Optional[Path]]]:
+        if self.selected_action is None:
+            return None
+        current_path = Path(self.current_combo.currentData())
+        previous_path = Path(self.previous_combo.currentData()) if self.selected_action == "compare" else None
+        return self.selected_action, current_path, previous_path
+
+
 class MainWindow(QMainWindow):
     """Uboot main application window."""
 
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Uboot — Startup & Persistence Analyzer")
-        self.setGeometry(100, 100, 1400, 900)
+        self.setGeometry(100, 100, 1460, 940)
 
-        # Components
         self.scanner = Scanner()
         self.scorer = Scorer()
         self.evidence_gatherer = Evidence(self.scanner.uboot_core_exe)
@@ -169,59 +277,57 @@ class MainWindow(QMainWindow):
         self.settings_store = SettingsStore()
         self.app_settings = self.settings_store.load()
         self.llm_advisor = LlmAdvisor()
+        self.report_generator = HtmlReportGenerator()
 
-        # State
         self.current_scan_result: Optional[ScanResult] = None
+        self.current_snapshot: Optional[Snapshot] = None
+        self.current_diff: Optional[SnapshotDiff] = None
+        self.current_view_mode: str = "live_scan"
+        self.current_view_title: str = "Live Scan"
+        self.row_contexts: List[RowContext] = []
         self.scored_entries: List[ScoredEntry] = []
-        self.selected_entry_id: Optional[str] = None
+        self.selected_row_id: Optional[str] = None
         self.current_tx_id: Optional[str] = None
         self.current_evidence = None
         self.current_advice: Optional[LlmAdvice] = None
+        self.pending_llm_row_id: Optional[str] = None
+        self.evidence_cache: Dict[str, object] = {}
+        self.advice_cache: Dict[Tuple[str, str], LlmAdvice] = {}
         self.session_llm_mode: Optional[LlmMode] = None
         self.llm_mode = self._load_configured_llm_mode()
         self.llm_mode_is_configured = bool(self.app_settings.llm_mode_configured)
         self._updating_llm_actions = False
-        self.pending_llm_entry_id: Optional[str] = None
 
-        # Setup UI
         self._setup_menu()
         self._setup_toolbar()
         self._setup_central_widget()
         self._setup_status_bar()
-
-        # Connect signals
         self._connect_signals()
 
     def _setup_menu(self):
         """Setup menu bar."""
         menubar = self.menuBar()
 
-        # File menu
         file_menu = menubar.addMenu("&File")
-        
-        open_action = file_menu.addAction("&Open Snapshot...")
-        open_action.triggered.connect(self._on_open_snapshot)
-        
+        open_snapshot_action = file_menu.addAction("&Open Snapshot...")
+        open_snapshot_action.triggered.connect(self._on_open_snapshot)
+        timeline_action = file_menu.addAction("&Timeline...")
+        timeline_action.triggered.connect(self._on_open_timeline)
+        export_action = file_menu.addAction("Export Forensic &HTML...")
+        export_action.triggered.connect(self._on_export_forensic_html)
         file_menu.addSeparator()
-        
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
 
-        # Scan menu
         scan_menu = menubar.addMenu("&Scan")
-        
         full_scan_action = scan_menu.addAction("&Full System Scan")
         full_scan_action.triggered.connect(lambda: self._on_start_scan(["all"]))
-        
         registry_scan_action = scan_menu.addAction("&Registry Only")
         registry_scan_action.triggered.connect(lambda: self._on_start_scan(["RunRegistry"]))
 
-        # Remediation menu
         remediation_menu = menubar.addMenu("&Remediation")
-        
         plan_action = remediation_menu.addAction("&Plan...")
         plan_action.triggered.connect(self._on_plan_remediation)
-        
         apply_action = remediation_menu.addAction("&Apply")
         apply_action.triggered.connect(self._on_apply_remediation)
 
@@ -229,11 +335,7 @@ class MainWindow(QMainWindow):
         self.llm_action_group = QActionGroup(self)
         self.llm_action_group.setExclusive(True)
         self.llm_actions = {}
-        for label, mode in (
-            ("Off", LlmMode.OFF),
-            ("Fast", LlmMode.FAST),
-            ("Better", LlmMode.BETTER),
-        ):
+        for label, mode in (("Off", LlmMode.OFF), ("Fast", LlmMode.FAST), ("Better", LlmMode.BETTER)):
             action = llm_menu.addAction(label)
             action.setCheckable(True)
             action.triggered.connect(
@@ -243,10 +345,8 @@ class MainWindow(QMainWindow):
             )
             self.llm_action_group.addAction(action)
             self.llm_actions[mode] = action
-
         self._sync_llm_menu_actions()
 
-        # Help menu
         help_menu = menubar.addMenu("&Help")
         about_action = help_menu.addAction("&About")
         about_action.triggered.connect(self._on_about)
@@ -256,33 +356,39 @@ class MainWindow(QMainWindow):
         toolbar = self.addToolBar("Main")
         toolbar.setObjectName("MainToolbar")
 
-        # Source filter
         toolbar.addWidget(QLabel("Filter:"))
         self.source_combo = QComboBox()
         self.source_combo.addItems(["All", "Registry", "Services", "Tasks", "Logon"])
         toolbar.addWidget(self.source_combo)
 
-        # Name filter
         toolbar.addWidget(QLabel(" Name:"))
         self.name_filter = QLineEdit()
         self.name_filter.setPlaceholderText("Type to filter...")
-        self.name_filter.setMaximumWidth(150)
+        self.name_filter.setMaximumWidth(160)
         toolbar.addWidget(self.name_filter)
+
+        toolbar.addWidget(QLabel(" Change:"))
+        self.change_filter_combo = QComboBox()
+        self.change_filter_combo.addItems(["All", "Current", "New", "Removed", "Changed"])
+        toolbar.addWidget(self.change_filter_combo)
 
         toolbar.addSeparator()
 
-        # Action buttons
-        scan_btn = QPushButton("🔍 Scan")
+        scan_btn = QPushButton("Scan")
         scan_btn.clicked.connect(lambda: self._on_start_scan(["all"]))
         toolbar.addWidget(scan_btn)
 
-        details_btn = QPushButton("📋 Details")
+        details_btn = QPushButton("Details")
         details_btn.clicked.connect(self._on_show_details)
         toolbar.addWidget(details_btn)
 
+        export_btn = QPushButton("Export HTML")
+        export_btn.clicked.connect(self._on_export_forensic_html)
+        toolbar.addWidget(export_btn)
+
         toolbar.addSeparator()
 
-        remove_btn = QPushButton("❌ Remove")
+        remove_btn = QPushButton("Plan Removal")
         remove_btn.clicked.connect(self._on_plan_remediation)
         toolbar.addWidget(remove_btn)
 
@@ -294,83 +400,67 @@ class MainWindow(QMainWindow):
         """Setup central widget with three panels."""
         central = QWidget()
         self.setCentralWidget(central)
-
         main_layout = QHBoxLayout(central)
         main_layout.setContentsMargins(5, 5, 5, 5)
 
-        # Left panel: entries list
         left_layout = QVBoxLayout()
-        left_layout.addWidget(QLabel("Entries"))
-        
+        self.entries_title = QLabel("Entries")
+        left_layout.addWidget(self.entries_title)
+
         self.entries_table = QTableWidget()
-        self.entries_table.setColumnCount(5)
-        self.entries_table.setHorizontalHeaderLabels(
-            ["Name", "Score", "Risk", "Source", "Signed"]
-        )
+        self.entries_table.setColumnCount(6)
+        self.entries_table.setHorizontalHeaderLabels(["Name", "Score", "Risk", "Source", "Signed", "Change"])
         self.entries_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.entries_table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.entries_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.entries_table.setColumnWidth(0, 250)
         self.entries_table.setColumnWidth(1, 60)
         self.entries_table.setColumnWidth(2, 100)
-        self.entries_table.setColumnWidth(3, 150)
-        self.entries_table.setColumnWidth(4, 60)
+        self.entries_table.setColumnWidth(3, 220)
+        self.entries_table.setColumnWidth(4, 70)
+        self.entries_table.setColumnWidth(5, 90)
         self.entries_table.itemSelectionChanged.connect(self._on_entry_selected)
         self.entries_table.cellClicked.connect(lambda *_: self._on_entry_selected())
-        
         left_layout.addWidget(self.entries_table)
 
-        # Right panel: details and actions
         right_layout = QVBoxLayout()
-
-        # Top: entry details
         right_layout.addWidget(QLabel("Entry Details"))
-        
         self.details_text = QTextEdit()
         self.details_text.setReadOnly(True)
-        self.details_text.setMaximumHeight(320)
-        self.details_text.setText("Select an entry to view summary. Use Details for full context and Get Evidence for forensic output.")
+        self.details_text.setMaximumHeight(300)
+        self.details_text.setText(
+            "Select an entry to view summary. Use Details for full context and Get Evidence for forensic output."
+        )
         right_layout.addWidget(self.details_text)
 
         right_layout.addWidget(QLabel("LLM Advisory"))
         self.advisor_text = QTextEdit()
         self.advisor_text.setReadOnly(True)
-        self.advisor_text.setMaximumHeight(220)
+        self.advisor_text.setMaximumHeight(260)
         right_layout.addWidget(self.advisor_text)
         self._reset_advisor_panel()
 
-        # Middle: action buttons
         right_layout.addWidget(QLabel("Actions"))
-        
         actions_layout = QHBoxLayout()
-        
-        evidence_btn = QPushButton("🔍 Get Evidence")
+        evidence_btn = QPushButton("Get Evidence")
         evidence_btn.clicked.connect(self._on_get_evidence)
         actions_layout.addWidget(evidence_btn)
-        
-        remove_selected_btn = QPushButton("❌ Plan Removal")
+        remove_selected_btn = QPushButton("Plan Removal")
         remove_selected_btn.clicked.connect(self._on_plan_remediation)
         actions_layout.addWidget(remove_selected_btn)
-        
-        undo_btn = QPushButton("↶ Undo")
+        undo_btn = QPushButton("Undo")
         undo_btn.clicked.connect(self._on_undo_remediation)
         actions_layout.addWidget(undo_btn)
-        
         right_layout.addLayout(actions_layout)
 
-        # Bottom: progress
         right_layout.addWidget(QLabel("Progress"))
-        
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         right_layout.addWidget(self.progress_bar)
-
         right_layout.addStretch()
 
-        # Combine into main layout with splitter
         left_widget = QWidget()
         left_widget.setLayout(left_layout)
-        
         right_widget = QWidget()
         right_widget.setLayout(right_layout)
 
@@ -379,40 +469,112 @@ class MainWindow(QMainWindow):
         splitter.addWidget(right_widget)
         splitter.setStretchFactor(0, 1)
         splitter.setStretchFactor(1, 2)
-
         main_layout.addWidget(splitter)
 
     def _setup_status_bar(self):
-        """Setup status bar."""
         self.statusBar().showMessage("Ready")
 
     def _connect_signals(self):
-        """Connect signals."""
         self.name_filter.textChanged.connect(self._on_filter_entries)
         self.source_combo.currentTextChanged.connect(self._on_filter_entries)
+        self.change_filter_combo.currentTextChanged.connect(self._on_filter_entries)
 
     def _load_configured_llm_mode(self) -> LlmMode:
-        """Load the persisted LLM mode or default to Off."""
         return self.llm_advisor.parse_mode(self.app_settings.llm_mode) or LlmMode.OFF
 
     def _persist_settings(self):
-        """Persist current settings."""
         self.settings_store.save(self.app_settings)
 
     def _sync_llm_menu_actions(self):
-        """Keep menu state aligned with the active global mode."""
         self._updating_llm_actions = True
         for mode, action in self.llm_actions.items():
             action.setChecked(mode == self.llm_mode)
         self._updating_llm_actions = False
 
-    def _on_llm_mode_selected(
-        self,
-        mode: LlmMode,
-        persist: bool,
-        user_initiated: bool = False,
-    ):
-        """Apply a global LLM mode selection."""
+    def _effective_llm_mode(self) -> LlmMode:
+        return self.session_llm_mode or self.llm_mode
+
+    def _current_row_context(self) -> Optional[RowContext]:
+        row = self.entries_table.currentRow()
+        if row < 0:
+            return None
+        visible_rows = self._visible_row_contexts()
+        if 0 <= row < len(visible_rows):
+            return visible_rows[row]
+        return None
+
+    def _visible_row_contexts(self) -> List[RowContext]:
+        """Return row contexts that match active filters."""
+        filter_text = self.name_filter.text().strip().lower()
+        source_text = self.source_combo.currentText().strip().lower()
+        change_text = self.change_filter_combo.currentText().strip().lower()
+
+        visible: List[RowContext] = []
+        for row_ctx in self.row_contexts:
+            entry = row_ctx.scored_entry.entry
+            name_matches = filter_text in entry.name.lower()
+            if source_text == "all":
+                source_matches = True
+            else:
+                source_matches = source_text in entry.source.lower()
+
+            kind_text = row_ctx.kind.lower()
+            if change_text == "all":
+                change_matches = True
+            elif change_text == "current":
+                change_matches = kind_text == "current"
+            else:
+                change_matches = kind_text == change_text
+
+            if name_matches and source_matches and change_matches:
+                visible.append(row_ctx)
+        return visible
+
+    def _score_entries(self, entries: List[Entry]) -> List[ScoredEntry]:
+        return self.scorer.score(entries)
+
+    def _build_row_contexts(self, scored_entries: List[ScoredEntry], kind: str = "current") -> List[RowContext]:
+        row_contexts: List[RowContext] = []
+        for index, scored_entry in enumerate(scored_entries):
+            row_contexts.append(
+                RowContext(
+                    row_id=f"{kind}:{index}:{scored_entry.entry.entry_id or scored_entry.entry.name}",
+                    scored_entry=scored_entry,
+                    kind=kind,
+                )
+            )
+        return row_contexts
+
+    def _build_diff_row_contexts(self, diff: SnapshotDiff) -> List[RowContext]:
+        row_contexts: List[RowContext] = []
+        for index, entry in enumerate(diff.new_entries):
+            row_contexts.append(
+                RowContext(
+                    row_id=f"new:{index}:{entry.entry_id or entry.name}",
+                    scored_entry=self._score_entries([entry])[0],
+                    kind="new",
+                )
+            )
+        for index, entry in enumerate(diff.removed_entries):
+            row_contexts.append(
+                RowContext(
+                    row_id=f"removed:{index}:{entry.entry_id or entry.name}",
+                    scored_entry=self._score_entries([entry])[0],
+                    kind="removed",
+                )
+            )
+        for index, change in enumerate(diff.changed_entries):
+            row_contexts.append(
+                RowContext(
+                    row_id=f"changed:{index}:{change.entry_after.entry_id or change.entry_after.name}",
+                    scored_entry=self._score_entries([change.entry_after])[0],
+                    kind="changed",
+                    change=change,
+                )
+            )
+        return row_contexts
+
+    def _on_llm_mode_selected(self, mode: LlmMode, persist: bool, user_initiated: bool = False):
         if self._updating_llm_actions:
             return
 
@@ -421,26 +583,19 @@ class MainWindow(QMainWindow):
             self.app_settings.llm_mode = mode.value
             self.app_settings.llm_mode_configured = True
             self.llm_mode_is_configured = True
-            self._persist_settings()
             self.session_llm_mode = None
+            self._persist_settings()
         else:
             self.session_llm_mode = mode
 
         self._sync_llm_menu_actions()
         self._reset_advisor_panel()
-
         if user_initiated and mode != LlmMode.OFF:
             self._offer_missing_component(mode)
-
         if user_initiated:
             self.statusBar().showMessage(f"LLM Assistance: {mode.value.capitalize()}")
 
-    def _effective_llm_mode(self) -> LlmMode:
-        """Return the current effective mode, preferring the session choice."""
-        return self.session_llm_mode or self.llm_mode
-
     def _resolve_llm_mode_for_evidence(self) -> LlmMode:
-        """Resolve LLM mode when Get Evidence is used."""
         if self.llm_mode_is_configured:
             return self.llm_mode
         if self.session_llm_mode is not None:
@@ -451,60 +606,49 @@ class MainWindow(QMainWindow):
             return LlmMode.OFF
 
         selected_mode = dialog.selected_mode()
-        self._on_llm_mode_selected(
-            selected_mode,
-            persist=dialog.remember_choice(),
-            user_initiated=False,
-        )
+        self._on_llm_mode_selected(selected_mode, persist=dialog.remember_choice(), user_initiated=False)
         return selected_mode
 
     def _reset_advisor_panel(self):
-        """Reset advisory panel according to the active mode."""
         if not self.llm_mode_is_configured and self.session_llm_mode is None:
-            self.advisor_text.setText(
-                "Configure LLM Assistance from the menu or when you use Get Evidence."
+            self.advisor_text.setHtml(
+                "<p>Configure <strong>LLM Assistance</strong> from the menu or when you use Get Evidence.</p>"
             )
             return
 
         mode = self._effective_llm_mode()
         if mode == LlmMode.OFF:
-            self.advisor_text.setText("LLM assistance is off. Heuristic evidence remains available.")
+            self.advisor_text.setHtml(
+                "<p><strong>LLM Assistance:</strong> Off</p><p>Heuristic evidence remains available.</p>"
+            )
             return
 
         status = self.llm_advisor.component_status(mode)
         if status["available"]:
-            self.advisor_text.setText(
-                f"{mode.value.capitalize()} mode ready. Use Get Evidence to request local advisory."
+            self.advisor_text.setHtml(
+                f"<p><strong>{mode.value.capitalize()}</strong> mode ready.</p>"
+                "<p>Use Get Evidence to request local advisory.</p>"
             )
         else:
-            self.advisor_text.setText(
-                f"{mode.value.capitalize()} mode selected, but the optional component is missing.\n\n"
-                f"{self.llm_advisor.install_instructions(mode)}"
+            self.advisor_text.setHtml(
+                f"<p><strong>{mode.value.capitalize()}</strong> mode selected, but the optional component is missing.</p>"
+                f"<pre>{self.llm_advisor.install_instructions(mode)}</pre>"
             )
 
     def _offer_missing_component(self, mode: LlmMode) -> bool:
-        """Show a short install/download offer if the component is missing."""
         status = self.llm_advisor.component_status(mode)
         self.app_settings.llm_component_status = status["status"]
         self.app_settings.llm_component_error = "" if status["available"] else status["message"]
         self._persist_settings()
-
         if status["available"]:
             return True
-
-        QMessageBox.information(
-            self,
-            "Optional Local AI Component",
-            self.llm_advisor.install_instructions(mode),
-        )
+        QMessageBox.information(self, "Optional Local AI Component", self.llm_advisor.install_instructions(mode))
         return False
 
     def _on_start_scan(self, sources: List[str]):
-        """Start system scan in background."""
         self.statusBar().showMessage("Scanning...")
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
-
         self.scan_worker = ScanWorker(self.scanner, sources)
         self.scan_worker.progress.connect(self.statusBar().showMessage)
         self.scan_worker.finished.connect(self._on_scan_complete)
@@ -512,70 +656,56 @@ class MainWindow(QMainWindow):
         self.scan_worker.start()
 
     def _on_scan_complete(self, result: ScanResult):
-        """Handle scan completion."""
         self.current_scan_result = result
         self.current_tx_id = None
         self.current_evidence = None
         self.current_advice = None
+        self.current_diff = None
+        self.current_view_mode = "live_scan"
+        self.current_view_title = "Live Scan"
         self.statusBar().showMessage(f"Scan complete: {len(result.entries)} entries")
         self.progress_bar.setVisible(False)
 
-        # Score entries
-        self.scored_entries = self.scorer.score(result.entries)
-
-        # Populate table
+        self.current_snapshot = self.snapshot_manager.save(result, label="ui-scan")
+        self.scored_entries = self._score_entries(result.entries)
+        self.row_contexts = self._build_row_contexts(self.scored_entries, kind="current")
         self._populate_entries_table()
-        self._on_filter_entries()
-
-        # Save snapshot
-        self.snapshot_manager.save(result, label="ui-scan")
+        self._reset_advisor_panel()
 
     def _on_scan_error(self, error_msg: str):
-        """Handle scan error."""
         self.statusBar().showMessage(error_msg)
         self.progress_bar.setVisible(False)
         QMessageBox.critical(self, "Scan Error", error_msg)
 
     def _populate_entries_table(self):
-        """Populate entries table with scored entries."""
+        visible = self._visible_row_contexts()
         self.entries_table.clearSelection()
-        self.selected_entry_id = None
-        self.current_evidence = None
-        self.current_advice = None
-        self._reset_advisor_panel()
-        self.entries_table.setRowCount(len(self.scored_entries))
+        self.entries_table.setRowCount(len(visible))
+        self.entries_title.setText(f"Entries — {self.current_view_title}")
+        self.selected_row_id = None
 
-        for row, scored_entry in enumerate(self.scored_entries):
+        for row, row_ctx in enumerate(visible):
+            scored_entry = row_ctx.scored_entry
             entry = scored_entry.entry
 
-            # Name
-            name_item = QTableWidgetItem(entry.name)
-            self.entries_table.setItem(row, 0, name_item)
+            self.entries_table.setItem(row, 0, QTableWidgetItem(entry.name))
 
-            # Score
             score_item = QTableWidgetItem(str(scored_entry.score))
             score_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.entries_table.setItem(row, 1, score_item)
 
-            # Risk level with color
             risk_item = QTableWidgetItem(scored_entry.risk_level.value)
             risk_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            
-            # Color by risk level
             if scored_entry.risk_level == RiskLevel.MALICIOUS:
                 risk_item.setForeground(QColor("red"))
             elif scored_entry.risk_level == RiskLevel.SUSPICIOUS:
                 risk_item.setForeground(QColor("orange"))
             else:
                 risk_item.setForeground(QColor("green"))
-            
             self.entries_table.setItem(row, 2, risk_item)
 
-            # Source
-            source_item = QTableWidgetItem(entry.source)
-            self.entries_table.setItem(row, 3, source_item)
+            self.entries_table.setItem(row, 3, QTableWidgetItem(entry.source))
 
-            # Signed
             signed_item = QTableWidgetItem(self._format_signed_status(entry))
             signed_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             if signed_item.text() == "Yes":
@@ -586,13 +716,24 @@ class MainWindow(QMainWindow):
                 signed_item.setForeground(QColor("gray"))
             self.entries_table.setItem(row, 4, signed_item)
 
+            change_label = row_ctx.kind.capitalize()
+            if row_ctx.kind == "changed" and row_ctx.change:
+                change_label = f"Changed ({len(row_ctx.change.changed_fields)})"
+            self.entries_table.setItem(row, 5, QTableWidgetItem(change_label))
+
+    def _select_row_by_id(self, row_id: str):
+        """Restore selection to a row context after the table is rebuilt."""
+        visible = self._visible_row_contexts()
+        for index, row_ctx in enumerate(visible):
+            if row_ctx.row_id == row_id:
+                self.entries_table.selectRow(index)
+                return
+
     @staticmethod
-    def _format_signed_status(entry) -> str:
-        """Render the signature state for a table row."""
+    def _format_signed_status(entry: Entry) -> str:
         metadata = entry.metadata or {}
         signature_status = str(metadata.get("signature_status", "")).strip().lower()
         signed = metadata.get("signed")
-
         if signed is True or signature_status in {"valid", "ok", "trusted", "success"}:
             return "Yes"
         if signature_status == "missingfile":
@@ -604,32 +745,32 @@ class MainWindow(QMainWindow):
         return "Unknown"
 
     def _on_entry_selected(self):
-        """Handle entry selection."""
-        row = self.entries_table.currentRow()
-        if row < 0:
-            selected_items = self.entries_table.selectedItems()
-            row = selected_items[0].row() if selected_items else -1
+        row_ctx = self._current_row_context()
+        if row_ctx is None:
+            self.selected_row_id = None
+            return
 
-        if 0 <= row < len(self.scored_entries):
-            self.selected_entry_id = self.scored_entries[row].entry.entry_id
-            self.current_evidence = None
-            self.current_advice = None
-            self.pending_llm_entry_id = None
-            self._update_details_panel()
-            self._reset_advisor_panel()
-        else:
-            self.selected_entry_id = None
+        self.selected_row_id = row_ctx.row_id
+        self.current_evidence = self.evidence_cache.get(row_ctx.scored_entry.entry.entry_id)
+        self.current_advice = self.advice_cache.get(
+            (row_ctx.scored_entry.entry.entry_id, self._effective_llm_mode().value)
+        )
+        self.pending_llm_row_id = None
+        self._update_details_panel()
+        self._render_cached_advice_or_reset(row_ctx)
 
     @staticmethod
-    def _build_details_text(scored_entry: ScoredEntry, include_metadata: bool = True) -> str:
-        """Build details text for an entry."""
+    def _build_details_text(row_ctx: RowContext, include_metadata: bool = True) -> str:
+        scored_entry = row_ctx.scored_entry
         entry = scored_entry.entry
         details = f"""
 Entry: {entry.name}
 ID: {entry.entry_id}
 Source: {entry.source}
 Command: {entry.command}
+Image Path: {entry.image_path}
 Status: {entry.status}
+View Kind: {row_ctx.kind}
 
 Score: {scored_entry.score}/100
 Risk: {scored_entry.risk_level.value.upper()}
@@ -642,175 +783,188 @@ Rule Matches ({len(scored_entry.rule_matches)}):
   {', '.join(scored_entry.rule_matches) if scored_entry.rule_matches else '(none)'}
         """.strip()
 
+        if row_ctx.change:
+            details += (
+                "\n\nChanged Fields:\n  "
+                + ", ".join(row_ctx.change.changed_fields)
+                + "\nPrevious Entry:\n"
+                + json.dumps(
+                    {
+                        "entry_id": row_ctx.change.entry_before.entry_id,
+                        "name": row_ctx.change.entry_before.name,
+                        "command": row_ctx.change.entry_before.command,
+                        "image_path": row_ctx.change.entry_before.image_path,
+                        "source": row_ctx.change.entry_before.source,
+                        "status": row_ctx.change.entry_before.status,
+                        "metadata": row_ctx.change.entry_before.metadata,
+                    },
+                    indent=2,
+                )
+            )
+
         if include_metadata:
             details += "\n\nMetadata:\n" + json.dumps(entry.metadata, indent=2)
-
         return details
 
-    def _update_details_panel(self, include_metadata: bool = False):
-        """Update details panel for selected entry."""
-        if not self.selected_entry_id:
+    def _update_details_panel(self, include_metadata: bool = True):
+        row_ctx = self._current_row_context()
+        if row_ctx is None:
+            self.details_text.setText(
+                "Select an entry to view summary. Use Details for full context and Get Evidence for forensic output."
+            )
+            return
+        self.details_text.setText(self._build_details_text(row_ctx, include_metadata=include_metadata))
+
+    def _render_cached_advice_or_reset(self, row_ctx: RowContext):
+        if row_ctx.kind == "removed":
+            self.advisor_text.setHtml(
+                "<p><strong>Historical removed entry.</strong></p><p>LLM advice is only available for current evidence gathered from the live system.</p>"
+            )
             return
 
-        # Find scored entry
-        scored_entry = next(
-            (e for e in self.scored_entries if e.entry.entry_id == self.selected_entry_id),
-            None
+        if self.current_advice:
+            self._render_advice(self.current_advice)
+            return
+
+        entry_id = row_ctx.scored_entry.entry.entry_id
+        cached = self.advice_cache.get((entry_id, self._effective_llm_mode().value))
+        if cached:
+            self.current_advice = cached
+            self._render_advice(cached)
+            return
+
+        self._reset_advisor_panel()
+
+    def _render_advice(self, advice: LlmAdvice):
+        sections = advice.to_display_sections()
+        evidence_list = "".join(
+            f"<li>{self._escape_html(item)}</li>" for item in sections["evidence"]
+        ) or "<li>(none)</li>"
+        self.advisor_text.setHtml(
+            f"<p><strong>Summary:</strong> {self._escape_html(sections['summary'])}</p>"
+            f"<p><strong>Assessment:</strong> {self._escape_html(sections['assessment'])}</p>"
+            f"<p><strong>Recommended Action:</strong> {self._escape_html(sections['recommended_action'])}</p>"
+            f"<p><strong>Secondary Action:</strong> {self._escape_html(sections['secondary_action'])}</p>"
+            f"<p><strong>Confidence:</strong> {self._escape_html(sections['confidence'])}</p>"
+            f"<p><strong>False Positive Risk:</strong> {self._escape_html(sections['false_positive_risk'])}</p>"
+            f"<p><strong>Justification:</strong> {self._escape_html(sections['justification'])}</p>"
+            f"<p><strong>Evidence:</strong></p><ul>{evidence_list}</ul>"
         )
-        if not scored_entry:
-            return
 
-        self.details_text.setText(self._build_details_text(scored_entry, include_metadata=include_metadata))
+    @staticmethod
+    def _escape_html(value: str) -> str:
+        return str(value).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
     def _on_filter_entries(self, text: str = ""):
-        """Filter entries by name and source."""
-        filter_text = self.name_filter.text().strip().lower()
-        source_text = self.source_combo.currentText().strip().lower()
-
-        for row in range(self.entries_table.rowCount()):
-            name_item = self.entries_table.item(row, 0)
-            source_item = self.entries_table.item(row, 3)
-            if not name_item or not source_item:
-                continue
-
-            name_matches = filter_text in name_item.text().lower()
-            if source_text == "all":
-                source_matches = True
-            else:
-                source_matches = source_text in source_item.text().lower()
-
-            self.entries_table.setRowHidden(row, not (name_matches and source_matches))
-
-        current_row = self.entries_table.currentRow()
-        if current_row >= 0 and self.entries_table.isRowHidden(current_row):
-            self.entries_table.clearSelection()
-            self.selected_entry_id = None
-            self.current_evidence = None
-            self.current_advice = None
-            self.details_text.setText("Select an entry to view summary. Use Details for full context and Get Evidence for forensic output.")
-            self._reset_advisor_panel()
+        self._populate_entries_table()
 
     def _selected_scored_entry(self) -> Optional[ScoredEntry]:
-        """Return currently selected scored entry."""
-        if not self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None:
             return None
-
-        return next(
-            (e for e in self.scored_entries if e.entry.entry_id == self.selected_entry_id),
-            None
-        )
+        return row_ctx.scored_entry
 
     def _on_show_details(self):
-        """Show details for selected entry."""
-        self._on_entry_selected()
-        if not self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None:
             QMessageBox.information(self, "No Selection", "Select a row in the table first.")
             return
 
-        scored_entry = self._selected_scored_entry()
-        if not scored_entry:
-            QMessageBox.information(self, "No Selection", "Select a valid row in the table first.")
-            return
-
         self._update_details_panel(include_metadata=True)
-
         details_dialog = QDialog(self)
         details_dialog.setWindowTitle("Entry Details")
         details_dialog.resize(900, 650)
-
         layout = QVBoxLayout(details_dialog)
         details_view = QTextEdit()
         details_view.setReadOnly(True)
-        details_view.setText(self._build_details_text(scored_entry, include_metadata=True))
+        details_view.setText(self._build_details_text(row_ctx, include_metadata=True))
         layout.addWidget(details_view)
-
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(details_dialog.accept)
         layout.addWidget(buttons)
-
         details_dialog.exec()
 
     def _on_get_evidence(self):
-        """Get detailed evidence for selected entry."""
-        self._on_entry_selected()
-        if not self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None:
             QMessageBox.warning(self, "No Selection", "Please select an entry first.")
             return
-
-        scored_entry = self._selected_scored_entry()
-        if not scored_entry:
-            QMessageBox.warning(self, "No Selection", "Please select a valid entry first.")
+        if row_ctx.kind == "removed":
+            QMessageBox.information(
+                self,
+                "Historical Entry",
+                "Removed historical entries cannot collect live evidence. Load a current scan or snapshot entry instead.",
+            )
             return
 
+        scored_entry = row_ctx.scored_entry
         mode = self._resolve_llm_mode_for_evidence()
 
         try:
             evidence = self.evidence_gatherer.get_evidence(scored_entry.entry)
-        except Exception as e:
-            QMessageBox.critical(self, "Evidence Error", str(e))
+        except Exception as exc:
+            QMessageBox.critical(self, "Evidence Error", str(exc))
             return
 
         self.current_evidence = evidence
         self.current_advice = None
+        self.evidence_cache[scored_entry.entry.entry_id] = evidence
         scored_entry.entry.metadata.update(evidence.to_metadata_updates())
-        current_row = self.entries_table.currentRow()
-        if current_row >= 0:
-            signed_item = self.entries_table.item(current_row, 4)
-            if signed_item is not None:
-                signed_item.setText(self._format_signed_status(scored_entry.entry))
-
+        selected_row_id = row_ctx.row_id
         self._update_details_panel(include_metadata=True)
-
-        pretty = json.dumps(evidence.raw_evidence or {}, indent=2)
+        self._populate_entries_table()
+        self._select_row_by_id(selected_row_id)
 
         evidence_dialog = QDialog(self)
         evidence_dialog.setWindowTitle("Evidence Output")
         evidence_dialog.resize(1000, 700)
-
         layout = QVBoxLayout(evidence_dialog)
-
         header = QLabel(
-            f"Entry ID: {self.selected_entry_id}\\n"
+            f"Entry ID: {scored_entry.entry.entry_id}\n"
             f"Collected: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         )
         layout.addWidget(header)
-
         evidence_view = QTextEdit()
         evidence_view.setReadOnly(True)
-        evidence_view.setText(pretty)
+        evidence_view.setText(json.dumps(evidence.raw_evidence or {}, indent=2))
         layout.addWidget(evidence_view)
-
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttons.accepted.connect(evidence_dialog.accept)
         layout.addWidget(buttons)
-
         evidence_dialog.exec()
 
-        self.statusBar().showMessage(f"Evidence loaded for {self.selected_entry_id}")
+        self.statusBar().showMessage(f"Evidence loaded for {scored_entry.entry.entry_id}")
 
         if mode == LlmMode.OFF:
-            self.advisor_text.setText(
-                "LLM assistance is off for this request. Evidence and heuristic explanation remain available."
+            self.advisor_text.setHtml(
+                "<p><strong>LLM Assistance:</strong> Off</p><p>Evidence and heuristic explanation remain available.</p>"
             )
+            return
+
+        cache_key = (scored_entry.entry.entry_id, mode.value)
+        cached = self.advice_cache.get(cache_key)
+        if cached:
+            self.current_advice = cached
+            self._render_advice(cached)
+            self.statusBar().showMessage("Loaded cached local advisory")
             return
 
         if not self._offer_missing_component(mode):
-            self.advisor_text.setText(
-                f"{mode.value.capitalize()} mode selected, but the optional component is not installed.\n\n"
-                "Continuing with heuristic evidence only."
+            self.advisor_text.setHtml(
+                f"<p><strong>{mode.value.capitalize()}</strong> mode selected, but the optional component is not installed.</p>"
+                "<p>Continuing with heuristic evidence only.</p>"
             )
             return
 
-        self.advisor_text.setText("Loading local advisory...")
-        self._start_llm_advisory_worker(scored_entry, evidence, mode)
+        self.advisor_text.setHtml("<p>Loading local advisory...</p>")
+        self._start_llm_advisory_worker(row_ctx, evidence, mode)
 
-    def _start_llm_advisory_worker(self, scored_entry: ScoredEntry, evidence, mode: LlmMode):
-        """Start local advisor worker."""
-        self.pending_llm_entry_id = scored_entry.entry.entry_id
+    def _start_llm_advisory_worker(self, row_ctx: RowContext, evidence, mode: LlmMode):
+        self.pending_llm_row_id = row_ctx.row_id
         self.llm_worker = LlmAdvisorWorker(
             advisor=self.llm_advisor,
-            entry=scored_entry.entry,
-            scored_entry=scored_entry,
+            entry=row_ctx.scored_entry.entry,
+            scored_entry=row_ctx.scored_entry,
             evidence=evidence,
             mode=mode,
         )
@@ -820,91 +974,84 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         self.llm_worker.start()
 
     def _on_llm_advice_ready(self, advice: LlmAdvice):
-        """Render structured local advisory."""
-        if self.pending_llm_entry_id and self.pending_llm_entry_id != self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None or (self.pending_llm_row_id and self.pending_llm_row_id != row_ctx.row_id):
             return
         self.current_advice = advice
-        self.pending_llm_entry_id = None
+        self.pending_llm_row_id = None
+        entry_id = row_ctx.scored_entry.entry.entry_id
+        self.advice_cache[(entry_id, self._effective_llm_mode().value)] = advice
         self.app_settings.llm_component_status = "installed"
         self.app_settings.llm_component_error = ""
         self._persist_settings()
-
-        lines = [
-            f"Summary: {advice.summary}",
-            f"Assessment: {advice.assessment}",
-            f"Recommended Action: {advice.recommended_action}",
-        ]
-        if advice.secondary_action:
-            lines.append(f"Secondary Action: {advice.secondary_action}")
-        lines.extend(
-            [
-                f"Confidence: {advice.confidence}",
-                f"False Positive Risk: {advice.false_positive_risk}",
-                "",
-                "Evidence:",
-            ]
-        )
-        if advice.evidence:
-            lines.extend(f"- {item}" for item in advice.evidence)
-        else:
-            lines.append("- (none)")
-        lines.extend(["", f"Justification: {advice.justification}"])
-        self.advisor_text.setText("\n".join(lines))
+        self._render_advice(advice)
         self.statusBar().showMessage("Local advisory ready")
 
     def _on_llm_advice_unavailable(self, message: str):
-        """Fallback when the optional LLM component is unavailable."""
-        if self.pending_llm_entry_id and self.pending_llm_entry_id != self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None or (self.pending_llm_row_id and self.pending_llm_row_id != row_ctx.row_id):
             return
         self.app_settings.llm_component_status = "missing"
-        self.pending_llm_entry_id = None
         self.app_settings.llm_component_error = message
+        self.pending_llm_row_id = None
         self._persist_settings()
-        self.advisor_text.setText(
-            "LLM advisory unavailable. Falling back to heuristic evidence.\n\n"
-            f"{message}"
+        self.advisor_text.setHtml(
+            "<p><strong>LLM advisory unavailable.</strong></p>"
+            "<p>Falling back to heuristic evidence.</p>"
+            f"<pre>{self._escape_html(message)}</pre>"
         )
         self.statusBar().showMessage("LLM advisory unavailable; using heuristics")
 
     def _on_llm_advice_error(self, message: str):
-        """Fallback when the optional LLM inference fails."""
-        if self.pending_llm_entry_id and self.pending_llm_entry_id != self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None or (self.pending_llm_row_id and self.pending_llm_row_id != row_ctx.row_id):
             return
         self.app_settings.llm_component_status = "error"
-        self.pending_llm_entry_id = None
         self.app_settings.llm_component_error = message
+        self.pending_llm_row_id = None
         self._persist_settings()
-        self.advisor_text.setText(
-            "LLM advisory failed. Falling back to heuristic evidence.\n\n"
-            f"{message}"
+        self.advisor_text.setHtml(
+            "<p><strong>LLM advisory failed.</strong></p>"
+            "<p>Falling back to heuristic evidence.</p>"
+            f"<pre>{self._escape_html(message)}</pre>"
         )
         self.statusBar().showMessage("LLM advisory failed; using heuristics")
 
     def _on_plan_remediation(self):
-        """Plan remediation for selected entry."""
-        self._on_entry_selected()
-        if not self.selected_entry_id:
+        row_ctx = self._current_row_context()
+        if row_ctx is None:
             QMessageBox.warning(self, "No Selection", "Please select an entry first.")
             return
-
-        scored_entry = self._selected_scored_entry()
-        if not scored_entry:
-            QMessageBox.warning(self, "No Selection", "Please select a valid entry first.")
+        if row_ctx.kind == "removed":
+            QMessageBox.information(
+                self,
+                "Historical Entry",
+                "Removed historical entries cannot be remediated from the current system view.",
+            )
             return
+
+        scored_entry = row_ctx.scored_entry
+        suggested_action = self.current_advice.recommended_action if self.current_advice else None
+        default_reason = f"Risk {scored_entry.score}/100 - {scored_entry.risk_level.value}"
+        if suggested_action and suggested_action != "no_action":
+            default_reason += f" | Advisor suggested: {suggested_action}"
 
         reason, ok = QInputDialog.getText(
             self,
             "Plan Remediation",
             "Reason for remediation:",
-            text=f"Risk {scored_entry.score}/100 - {scored_entry.risk_level.value}"
+            text=default_reason,
         )
         if not ok:
             return
 
         try:
-            plan = self.remediator.plan([self.selected_entry_id], reason=reason or "User-initiated remediation")
-        except Exception as e:
-            QMessageBox.critical(self, "Plan Error", str(e))
+            plan = self.remediator.plan(
+                [scored_entry.entry.entry_id],
+                reason=reason or "User-initiated remediation",
+            )
+        except Exception as exc:
+            QMessageBox.critical(self, "Plan Error", str(exc))
             return
 
         self.current_tx_id = plan.tx_id
@@ -926,15 +1073,13 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         }
         self.details_text.append("\n\n=== Remediation Plan ===\n" + json.dumps(plan_summary, indent=2))
         self.statusBar().showMessage(f"Plan created: {plan.tx_id}")
-
         QMessageBox.information(
             self,
             "Plan Created",
-            f"Transaction {plan.tx_id} created with {len(plan.operations)} operation(s)."
+            f"Transaction {plan.tx_id} created with {len(plan.operations)} operation(s).",
         )
 
     def _on_apply_remediation(self):
-        """Apply remediation plan."""
         tx_id = self.current_tx_id
         if not tx_id:
             tx_id, ok = QInputDialog.getText(self, "Apply Remediation", "Transaction ID:")
@@ -942,18 +1087,14 @@ Rule Matches ({len(scored_entry.rule_matches)}):
                 return
             tx_id = tx_id.strip()
 
-        confirm = QMessageBox.question(
-            self,
-            "Confirm Apply",
-            f"Apply remediation transaction {tx_id}?"
-        )
+        confirm = QMessageBox.question(self, "Confirm Apply", f"Apply remediation transaction {tx_id}?")
         if confirm != QMessageBox.StandardButton.Yes:
             return
 
         try:
             applied = self.remediator.apply(tx_id)
-        except Exception as e:
-            QMessageBox.critical(self, "Apply Error", str(e))
+        except Exception as exc:
+            QMessageBox.critical(self, "Apply Error", str(exc))
             return
 
         if applied:
@@ -963,29 +1104,23 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             QMessageBox.warning(self, "Apply", f"Transaction apply failed: {tx_id}")
 
     def _on_undo_remediation(self):
-        """Undo remediation."""
         tx_id, ok = QInputDialog.getText(
             self,
             "Undo Remediation",
             "Transaction ID to undo:",
-            text=self.current_tx_id or ""
+            text=self.current_tx_id or "",
         )
         if not ok or not tx_id.strip():
             return
-
         tx_id = tx_id.strip()
-        confirm = QMessageBox.question(
-            self,
-            "Confirm Undo",
-            f"Undo remediation transaction {tx_id}?"
-        )
+        confirm = QMessageBox.question(self, "Confirm Undo", f"Undo remediation transaction {tx_id}?")
         if confirm != QMessageBox.StandardButton.Yes:
             return
 
         try:
             undone = self.remediator.undo(tx_id)
-        except Exception as e:
-            QMessageBox.critical(self, "Undo Error", str(e))
+        except Exception as exc:
+            QMessageBox.critical(self, "Undo Error", str(exc))
             return
 
         if undone:
@@ -994,39 +1129,196 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         else:
             QMessageBox.warning(self, "Undo", f"Transaction undo failed: {tx_id}")
 
+    def _load_snapshot_into_view(self, snapshot: Snapshot, title: str):
+        self.current_snapshot = snapshot
+        self.current_diff = None
+        self.current_scan_result = ScanResult(entries=snapshot.entries, errors=[])
+        self.current_view_mode = "snapshot"
+        self.current_view_title = title
+        self.current_evidence = None
+        self.current_advice = None
+        self.scored_entries = self._score_entries(snapshot.entries)
+        self.row_contexts = self._build_row_contexts(self.scored_entries, kind="current")
+        self._populate_entries_table()
+        self._reset_advisor_panel()
+        self.statusBar().showMessage(f"Loaded snapshot with {len(snapshot.entries)} entries")
+
+    def _load_diff_into_view(self, diff: SnapshotDiff, current_snapshot: Snapshot, title: str):
+        self.current_snapshot = current_snapshot
+        self.current_diff = diff
+        self.current_scan_result = None
+        self.current_view_mode = "diff"
+        self.current_view_title = title
+        self.current_evidence = None
+        self.current_advice = None
+        self.scored_entries = []
+        self.row_contexts = self._build_diff_row_contexts(diff)
+        self._populate_entries_table()
+        self._reset_advisor_panel()
+        self.statusBar().showMessage(
+            f"Loaded diff: {len(diff.new_entries)} new, {len(diff.removed_entries)} removed, {len(diff.changed_entries)} changed"
+        )
+
     def _on_open_snapshot(self):
-        """Open existing snapshot."""
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Open Snapshot",
             str(self.snapshot_manager.snapshot_dir),
-            "JSON Files (*.json);;All Files (*)"
+            "JSON Files (*.json);;All Files (*)",
         )
         if not file_path:
             return
-
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            snapshot = self.snapshot_manager._dict_to_snapshot(data)
-            self.current_scan_result = ScanResult(entries=snapshot.entries, errors=[])
-            self.scored_entries = self.scorer.score(snapshot.entries)
-            self._populate_entries_table()
-            self._on_filter_entries()
-            self.statusBar().showMessage(
-                f"Loaded snapshot with {len(snapshot.entries)} entries"
+            snapshot = self.snapshot_manager.load_snapshot(Path(file_path))
+            self._load_snapshot_into_view(snapshot, f"Snapshot {snapshot.timestamp}")
+        except Exception as exc:
+            QMessageBox.critical(self, "Open Snapshot Error", str(exc))
+
+    def _on_open_timeline(self):
+        snapshots = self.snapshot_manager.list_snapshots()
+        if not snapshots:
+            QMessageBox.information(self, "Timeline", "No snapshots are available yet.")
+            return
+
+        dialog = SnapshotTimelineDialog(snapshots, self)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+
+        selection = dialog.selection()
+        if selection is None:
+            return
+
+        action, current_path, previous_path = selection
+        try:
+            current_snapshot = self.snapshot_manager.load_snapshot(current_path)
+            if action == "open":
+                self._load_snapshot_into_view(current_snapshot, f"Snapshot {current_snapshot.timestamp}")
+                return
+
+            if previous_path is None:
+                raise RuntimeError("A previous snapshot is required for diff mode")
+
+            previous_snapshot = self.snapshot_manager.load_snapshot(previous_path)
+            diff = self.snapshot_manager.diff(current_snapshot, previous_snapshot)
+            self._load_diff_into_view(
+                diff,
+                current_snapshot=current_snapshot,
+                title=f"Diff {previous_snapshot.timestamp} → {current_snapshot.timestamp}",
             )
-        except Exception as e:
-            QMessageBox.critical(self, "Open Snapshot Error", str(e))
+        except Exception as exc:
+            QMessageBox.critical(self, "Timeline Error", str(exc))
+
+    def _build_report_records(self, visible_rows: List[RowContext]) -> List[ForensicEntryRecord]:
+        records: List[ForensicEntryRecord] = []
+        for row_ctx in visible_rows:
+            scored_entry = row_ctx.scored_entry
+            entry = scored_entry.entry
+            evidence = self.evidence_cache.get(entry.entry_id)
+            advice = None
+            for mode in (LlmMode.BETTER.value, LlmMode.FAST.value):
+                advice = self.advice_cache.get((entry.entry_id, mode))
+                if advice:
+                    break
+
+            previous_entry = None
+            changed_fields: List[str] = []
+            if row_ctx.change:
+                previous_entry = {
+                    "entry_id": row_ctx.change.entry_before.entry_id,
+                    "name": row_ctx.change.entry_before.name,
+                    "command": row_ctx.change.entry_before.command,
+                    "image_path": row_ctx.change.entry_before.image_path,
+                    "source": row_ctx.change.entry_before.source,
+                    "status": row_ctx.change.entry_before.status,
+                    "metadata": row_ctx.change.entry_before.metadata,
+                }
+                changed_fields = list(row_ctx.change.changed_fields)
+
+            records.append(
+                ForensicEntryRecord(
+                    entry_id=entry.entry_id,
+                    name=entry.name,
+                    source=entry.source,
+                    command=entry.command,
+                    image_path=entry.image_path,
+                    status=entry.status,
+                    score=scored_entry.score,
+                    risk_level=scored_entry.risk_level.value,
+                    explanation=scored_entry.explanation,
+                    signals=list(scored_entry.signals),
+                    rule_matches=list(scored_entry.rule_matches),
+                    metadata=dict(entry.metadata or {}),
+                    evidence=(evidence.raw_evidence if evidence else None),
+                    advice=advice,
+                    change_kind=row_ctx.kind,
+                    changed_fields=changed_fields,
+                    previous_entry=previous_entry,
+                )
+            )
+        return records
+
+    def _build_report_data(self) -> ForensicReportData:
+        visible_rows = self._visible_row_contexts()
+        timeline = [
+            {
+                "timestamp": summary.timestamp,
+                "label": summary.label,
+                "entry_count": summary.entry_count,
+                "error_count": summary.error_count,
+            }
+            for summary in self.snapshot_manager.list_snapshots()[:10]
+        ]
+        summary = {
+            "view_mode": self.current_view_mode,
+            "visible_entries": len(visible_rows),
+            "cached_evidence": len(self.evidence_cache),
+            "cached_advice": len(self.advice_cache),
+        }
+        metadata = {
+            "view_title": self.current_view_title,
+            "snapshot_timestamp": self.current_snapshot.timestamp if self.current_snapshot else "",
+            "diff_previous": self.current_diff.timestamp_previous if self.current_diff else "",
+            "diff_current": self.current_diff.timestamp_current if self.current_diff else "",
+            "new_entries": len(self.current_diff.new_entries) if self.current_diff else 0,
+            "removed_entries": len(self.current_diff.removed_entries) if self.current_diff else 0,
+            "changed_entries": len(self.current_diff.changed_entries) if self.current_diff else 0,
+            "unchanged_entries": self.current_diff.unchanged_entry_count if self.current_diff else 0,
+        }
+        return ForensicReportData(
+            title=f"Uboot Forensic Report — {self.current_view_title}",
+            source_type=self.current_view_mode,
+            generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            summary=summary,
+            metadata=metadata,
+            timeline=timeline,
+            entries=self._build_report_records(visible_rows),
+        )
+
+    def _on_export_forensic_html(self):
+        report = self._build_report_data()
+        target_dir = QFileDialog.getExistingDirectory(self, "Choose export folder", str(Path.cwd()))
+        if not target_dir:
+            return
+
+        safe_title = self.current_view_mode.replace(" ", "_")
+        filename = f"uboot-report-{safe_title}-{datetime.now().strftime('%Y%m%d-%H%M%S')}.html"
+        output_path = Path(target_dir) / filename
+        try:
+            self.report_generator.write_html(report, output_path)
+        except Exception as exc:
+            QMessageBox.critical(self, "Export Error", str(exc))
+            return
+
+        QMessageBox.information(self, "Export Complete", f"Forensic HTML exported to:\n{output_path}")
+        self.statusBar().showMessage(f"Exported report: {output_path.name}")
 
     def _on_about(self):
-        """Show about dialog."""
         QMessageBox.about(
             self,
             "About Uboot",
             "Uboot v1.0\n\n"
-            "Autoruns-style analyzer with AI scoring.\n"
-            "Built with Python, PySide6, and C++17."
+            "Autoruns-style analyzer with AI scoring, timeline support, and forensic export.\n"
+            "Built with Python, PySide6, and C++17.",
         )
 
 

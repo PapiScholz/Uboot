@@ -11,7 +11,8 @@ from app.orchestrator.scanner import Entry, ScanResult, CollectorError, Scanner
 from app.orchestrator.evidence import EntryEvidence
 from app.orchestrator.scoring import Scorer, RiskLevel
 from app.orchestrator.snapshot import SnapshotManager, Snapshot
-from app.orchestrator.llm_advisor import LlmAdvisor, LlmMode
+from app.orchestrator.llm_advisor import AdviceValidationError, LlmAdvisor, LlmMode
+from app.orchestrator.reporting import ForensicEntryRecord, ForensicReportData, HtmlReportGenerator
 from app.settings import AppSettings, SettingsStore
 from tests.fixtures.fixtures import (
     CLEAN_ENTRY, SUSPICIOUS_ENTRY, MALICIOUS_ENTRY,
@@ -223,7 +224,7 @@ def test_snapshot_diff_detection():
     snapshot2 = Snapshot(
         timestamp="2026-04-13T11:00:00",
         entries=[
-            Entry(entry_id="e2", name="Entry2", command="cmd2_modified.exe", image_path="cmd2_modified.exe", source="service", status="active"),
+            Entry(entry_id="e2", name="Entry2", command="cmd2_modified.exe", image_path="cmd2_modified.exe", source="service", status="disabled"),
             Entry(entry_id="e3", name="Entry3", command="cmd3.exe", image_path="cmd3.exe", source="task", status="active"),
         ],
         entry_count=2
@@ -233,15 +234,47 @@ def test_snapshot_diff_detection():
     diff = manager.diff(snapshot2, snapshot1)
     
     # Verify diff results
-    # Since e2's command changed, it appears as a new entry and the old e2 as removed
-    assert len(diff.new_entries) == 2, f"Expected 2 new entries, got {len(diff.new_entries)}"
-    assert len(diff.removed_entries) == 2, f"Expected 2 removed entries, got {len(diff.removed_entries)}"
+    assert len(diff.new_entries) == 1, f"Expected 1 new entry, got {len(diff.new_entries)}"
+    assert len(diff.removed_entries) == 1, f"Expected 1 removed entry, got {len(diff.removed_entries)}"
+    assert len(diff.changed_entries) == 1, f"Expected 1 changed entry, got {len(diff.changed_entries)}"
+    assert "command" in diff.changed_entries[0].changed_fields, "Changed command not detected"
+    assert "status" in diff.changed_entries[0].changed_fields, "Changed status not detected"
     assert diff.unchanged_entry_count == 0, f"Expected 0 unchanged entries, got {diff.unchanged_entry_count}"
     
     print(f"  ✓ New entries: {len(diff.new_entries)}")
     print(f"  ✓ Removed entries: {len(diff.removed_entries)}")
     print(f"  ✓ Changed entries: {len(diff.changed_entries)}")
     print(f"  ✓ Unchanged entries: {diff.unchanged_entry_count}")
+
+
+def test_snapshot_listing_and_loading():
+    """Verify snapshot summaries can be listed and loaded back."""
+    print("Testing snapshot listing...")
+
+    with TemporaryDirectory() as temp_dir:
+        manager = SnapshotManager(Path(temp_dir))
+        scan_result = ScanResult(
+            entries=[
+                Entry(
+                    entry_id="entry-1",
+                    name="Test Entry",
+                    command="test.exe",
+                    image_path="test.exe",
+                    source="registry",
+                    status="active",
+                )
+            ]
+        )
+        saved = manager.save(scan_result, label="history-test")
+        summaries = manager.list_snapshots()
+        loaded = manager.load_snapshot(summaries[0].path)
+
+        assert len(summaries) == 1
+        assert summaries[0].label == "history-test"
+        assert loaded.entries[0].image_path == "test.exe"
+        assert loaded.timestamp == saved.timestamp
+
+    print("  ✓ Snapshot summaries verified")
 
 
 def test_llm_advisor_payload_and_validation():
@@ -295,6 +328,26 @@ def test_llm_advisor_payload_and_validation():
     assert advice.recommended_action == "disable"
     assert advice.assessment == "suspicious"
 
+    try:
+        advisor._enforce_policy(
+            {"score": 20, "risk_level": "clean"},
+            advisor.validate_response(
+                {
+                    "summary": "Safe entry.",
+                    "evidence": ["signed microsoft binary"],
+                    "assessment": "clean",
+                    "recommended_action": "delete",
+                    "secondary_action": None,
+                    "justification": "Delete it anyway.",
+                    "false_positive_risk": "high",
+                    "confidence": "low",
+                }
+            ),
+        )
+        raise AssertionError("Expected destructive policy rejection")
+    except AdviceValidationError:
+        pass
+
     print("  ✓ Advisor payload and validation verified")
 
 
@@ -322,6 +375,46 @@ def test_settings_persistence():
     print("  ✓ Settings persistence verified")
 
 
+def test_html_report_generation():
+    """Verify forensic HTML export renders required sections."""
+    print("Testing forensic HTML generation...")
+
+    generator = HtmlReportGenerator()
+    report = ForensicReportData(
+        title="Test Report",
+        source_type="snapshot",
+        generated_at="2026-04-13 20:00:00",
+        summary={"visible_entries": 1, "cached_evidence": 1},
+        metadata={"view_title": "Snapshot Test"},
+        timeline=[{"timestamp": "2026-04-13T20:00:00Z", "label": "ui-scan", "entry_count": 1, "error_count": 0}],
+        entries=[
+            ForensicEntryRecord(
+                entry_id="entry-1",
+                name="Test Entry",
+                source="registry",
+                command="test.exe",
+                image_path="test.exe",
+                status="active",
+                score=50,
+                risk_level="suspicious",
+                explanation="Suspicious test entry",
+                signals=["unsigned_binary"],
+                rule_matches=["unsigned_binary"],
+                metadata={"signed": False},
+                evidence={"hashes": {"sha256": "abc123"}},
+            )
+        ],
+    )
+    html = generator.generate_html(report)
+
+    assert "Test Report" in html
+    assert "LLM Advisory" in html
+    assert "unsigned_binary" in html
+    assert "ui-scan" in html
+
+    print("  ✓ HTML report generation verified")
+
+
 def run_all_tests():
     """Run all smoke tests."""
     print("\n" + "="*60)
@@ -336,7 +429,9 @@ def run_all_tests():
         test_llm_advisor_payload_and_validation,
         test_settings_persistence,
         test_snapshot_persistence,
+        test_snapshot_listing_and_loading,
         test_snapshot_diff_detection,
+        test_html_report_generation,
     ]
     
     passed = 0

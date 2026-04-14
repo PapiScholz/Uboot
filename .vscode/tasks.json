@@ -48,6 +48,21 @@
       },
       "group": "test",
       "problemMatcher": []
+    },
+    {
+      "label": "sign: uboot-core",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/scripts/windows/sign-file.ps1",
+        "-FilePath", "${workspaceFolder}/build-vs18/bin/Release/uboot-core.exe"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "problemMatcher": []
     }
   ]
 }

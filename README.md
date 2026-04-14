@@ -97,6 +97,7 @@ core/
   model/                   Shared data types (Entry, CollectorError)
 docs/
   ARCHITECTURE.md
+  SIGNING.md
 rules/
   rules_v1.json            Signal definitions for scoring
 tests/
@@ -108,6 +109,25 @@ tests/
 ## Status
 
 See [ROADMAP.md](ROADMAP.md) for the current implementation plan and progress.
+
+---
+
+## Windows signing
+
+`uboot-core.exe` is currently a normal Windows executable build artifact.  
+For distribution, it should be Authenticode-signed to reduce Smart App Control / SmartScreen friction.
+
+This repo includes:
+
+- optional CMake signing target support
+- PowerShell signing helper at [scripts/windows/sign-file.ps1](scripts/windows/sign-file.ps1)
+- detailed signing notes at [docs/SIGNING.md](docs/SIGNING.md)
+
+Quick validation:
+
+```powershell
+Get-AuthenticodeSignature .\build-vs18\bin\Release\uboot-core.exe | Format-List Status,SignerCertificate,TimeStamperCertificate,Path
+```
 
 ---
 

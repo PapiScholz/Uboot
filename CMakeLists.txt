@@ -19,6 +19,17 @@ endif()
 # Set output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+option(UBOOT_ENABLE_SIGNING "Enable optional Authenticode signing targets" OFF)
+option(UBOOT_SIGN_AFTER_BUILD "Sign uboot-core.exe immediately after build when signing is enabled" OFF)
+
+set(UBOOT_SIGN_SCRIPT "${CMAKE_SOURCE_DIR}/scripts/windows/sign-file.ps1" CACHE FILEPATH "PowerShell signing helper")
+set(UBOOT_SIGNTOOL "" CACHE FILEPATH "Path to signtool.exe. Empty means auto-detect in script.")
+set(UBOOT_SIGN_CERT_SHA1 "" CACHE STRING "SHA1 thumbprint of the code-signing certificate in CurrentUser/My or LocalMachine/My")
+set(UBOOT_SIGN_PFX_PATH "" CACHE FILEPATH "Optional path to a PFX certificate")
+set(UBOOT_SIGN_PFX_PASSWORD "" CACHE STRING "Optional password for the PFX certificate")
+set(UBOOT_SIGN_TIMESTAMP_URL "http://timestamp.digicert.com" CACHE STRING "RFC3161 or Authenticode timestamp URL")
+set(UBOOT_SIGN_DESCRIPTION "Uboot core executable" CACHE STRING "File description used during signing")
+
 # Find or download RapidJSON
 find_package(RapidJSON QUIET)
 if(NOT RapidJSON_FOUND)
@@ -77,3 +88,38 @@ target_compile_definitions(uboot-core PRIVATE UNICODE _UNICODE STRICT WIN32_LEAN
 # Link Windows libraries
 target_link_libraries(uboot-core PRIVATE taskschd comsupp shlwapi comctl32)
 target_include_directories(uboot-core PRIVATE ${RAPIDJSON_INCLUDE_DIRS})
+
+if(UBOOT_ENABLE_SIGNING)
+    if(NOT EXISTS "${UBOOT_SIGN_SCRIPT}")
+        message(FATAL_ERROR "UBOOT_ENABLE_SIGNING is ON but signing script was not found: ${UBOOT_SIGN_SCRIPT}")
+    endif()
+
+    add_custom_target(sign-uboot-core
+        COMMAND powershell -ExecutionPolicy Bypass -File "${UBOOT_SIGN_SCRIPT}"
+            -FilePath "$<TARGET_FILE:uboot-core>"
+            -SignToolPath "${UBOOT_SIGNTOOL}"
+            -CertSha1 "${UBOOT_SIGN_CERT_SHA1}"
+            -PfxPath "${UBOOT_SIGN_PFX_PATH}"
+            -PfxPassword "${UBOOT_SIGN_PFX_PASSWORD}"
+            -TimestampUrl "${UBOOT_SIGN_TIMESTAMP_URL}"
+            -Description "${UBOOT_SIGN_DESCRIPTION}"
+        DEPENDS uboot-core
+        COMMENT "Signing uboot-core.exe with Authenticode"
+        VERBATIM
+    )
+
+    if(UBOOT_SIGN_AFTER_BUILD)
+        add_custom_command(TARGET uboot-core POST_BUILD
+            COMMAND powershell -ExecutionPolicy Bypass -File "${UBOOT_SIGN_SCRIPT}"
+                -FilePath "$<TARGET_FILE:uboot-core>"
+                -SignToolPath "${UBOOT_SIGNTOOL}"
+                -CertSha1 "${UBOOT_SIGN_CERT_SHA1}"
+                -PfxPath "${UBOOT_SIGN_PFX_PATH}"
+                -PfxPassword "${UBOOT_SIGN_PFX_PASSWORD}"
+                -TimestampUrl "${UBOOT_SIGN_TIMESTAMP_URL}"
+                -Description "${UBOOT_SIGN_DESCRIPTION}"
+            COMMENT "Signing uboot-core.exe after build"
+            VERBATIM
+        )
+    endif()
+endif()

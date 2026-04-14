@@ -8,6 +8,7 @@
 - Verificar el entorno Python y dependencias antes de depurar errores de importación o tipado.
 - Marcar los hitos del roadmap apenas se validen, no dejarlo para el final, para facilitar el tracking y evitar confusión.
 - En features de producto, no sostener presets UX múltiples si uno de ellos no entrega una calidad claramente aceptable; simplificar la interfaz antes que mantener modos engañosos.
+- Para distribución en Windows, no asumir que un `.exe` unsigned va a ejecutar sin fricción: validar `Get-AuthenticodeSignature` y documentar Smart App Control / SmartScreen / WDAC por separado.
 - Cada vez que se complete y valide una task o step del roadmap en esta sesión, actualizar `ROADMAP.md` en el mismo turno y marcarlo como completado; si quedó parcial, desdoblarlo o anotarlo explícitamente en vez de dejar un estado ambiguo.
 - No marcar una task del roadmap como completada si falta una dependencia operativa crítica para usarla de verdad (por ejemplo runtime, modelo, binario externo, credenciales o instalación requerida). En esos casos, dejarla pendiente o dividirla en substeps explícitos.
 - Para integración LLM en Windows con releases actuales de `llama.cpp`, preferir `llama-completion.exe` para invocación no interactiva; `llama-cli.exe` puede caer a modo chat y no aceptar bien `--no-conversation`.

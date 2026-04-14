@@ -1,11 +1,13 @@
 """Scanner: invokes uboot-core.exe and parses JSON output."""
 import json
+import os
 import subprocess
-import sys
 import hashlib
 from pathlib import Path
 from typing import List, Optional
 from dataclasses import dataclass, field
+
+from app.runtime_paths import app_root
 
 
 @dataclass
@@ -50,19 +52,28 @@ class Scanner:
     @staticmethod
     def _resolve_uboot_core_path() -> Path:
         """Resolve uboot-core.exe from common local build locations."""
+        override = os.environ.get("UBOOT_CORE_EXE", "").strip()
+        if override:
+            candidate = Path(override)
+            if candidate.exists():
+                return candidate
+
+        root = app_root()
+        repo_root = Path(__file__).resolve().parent.parent.parent
         candidates = [
+            root / "uboot-core.exe",
+            repo_root / "build-vs18/bin/Release/uboot-core.exe",
+            repo_root / "build/bin/Release/uboot-core.exe",
+            repo_root / "build-vs18/Release/uboot-core.exe",
+            repo_root / "build/Release/uboot-core.exe",
             Path("uboot-core.exe"),
-            Path("build-vs18/bin/Release/uboot-core.exe"),
-            Path("build/bin/Release/uboot-core.exe"),
-            Path("build-vs18/Release/uboot-core.exe"),
-            Path("build/Release/uboot-core.exe"),
         ]
 
         for candidate in candidates:
             if candidate.exists():
                 return candidate
 
-        return Path("uboot-core.exe")
+        return root / "uboot-core.exe"
 
     def scan(
         self, 

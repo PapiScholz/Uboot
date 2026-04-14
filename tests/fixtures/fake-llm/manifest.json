@@ -1,0 +1,19 @@
+{
+  "runtime": {
+    "version": "b8779",
+    "url": "https://github.com/ggml-org/llama.cpp/releases/download/b8779/llama-b8779-bin-win-cpu-x64.zip",
+    "path": "tests\\fixtures\\fake-llm\\runtime\\llama-completion.exe",
+    "sha256": "",
+    "installed": false
+  },
+  "models": {
+    "better": {
+      "filename": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "version": "Q4_K_M_1.5B",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true",
+      "path": "tests\\fixtures\\fake-llm\\models\\qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "installed": false,
+      "sha256": ""
+    }
+  }
+}

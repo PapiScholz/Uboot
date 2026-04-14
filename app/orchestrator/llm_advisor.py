@@ -14,6 +14,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
+from app.runtime_paths import app_root, is_frozen, user_data_dir
+
 from .evidence import EntryEvidence
 from .scanner import Entry
 from .scoring import ScoredEntry
@@ -218,7 +220,7 @@ class LlmInstaller:
             model_installed=model_installed,
             manifest_path=self.manifest_path,
         )
-        self._write_manifest()
+        self.sync_manifest()
         return result
 
     def _build_model_asset(self, mode: LlmMode) -> LlmAsset:
@@ -310,7 +312,8 @@ class LlmInstaller:
             raise LlmInstallError("The downloaded runtime archive did not contain llama-completion.exe.")
         return matches[0].parent
 
-    def _write_manifest(self) -> None:
+    def sync_manifest(self) -> None:
+        """Write manifest metadata from currently installed runtime/model assets."""
         runtime_path = self.runtime_path()
         runtime_sha = self._sha256_file(runtime_path) if runtime_path.exists() else ""
         payload = {
@@ -335,7 +338,12 @@ class LlmInstaller:
                 for mode, spec in self.model_specs.items()
             },
         }
-        self.manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        try:
+            self.component_root.mkdir(parents=True, exist_ok=True)
+            self.manifest_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        except OSError:
+            # Read-only installs can still operate with preinstalled assets.
+            return
 
     @staticmethod
     def _sha256_file(path: Path) -> str:
@@ -376,10 +384,24 @@ class LlmAdvisor:
     def __init__(self, component_root: Optional[Path] = None):
         self.component_root = component_root or self._default_component_root()
         self.installer = LlmInstaller(self.component_root)
+        self.installer.sync_manifest()
 
     @staticmethod
     def _default_component_root() -> Path:
-        return Path("llm")
+        override = os.environ.get("UBOOT_LLM_ROOT", "").strip()
+        if override:
+            return Path(override)
+
+        runtime_root = app_root()
+        bundled = runtime_root / "llm"
+        if bundled.exists():
+            return bundled
+
+        if is_frozen():
+            return user_data_dir() / "llm"
+
+        repo_root = Path(__file__).resolve().parent.parent.parent
+        return repo_root / "llm"
 
     @staticmethod
     def parse_mode(value: Optional[str]) -> Optional[LlmMode]:
@@ -450,6 +472,8 @@ class LlmAdvisor:
         model_installed = model_path is not None and model_path.exists()
         missing_assets = self.installer.missing_assets(mode)
         available = runtime_installed and model_installed
+        if available:
+            self.installer.sync_manifest()
 
         if available:
             status = "installed"
@@ -692,16 +716,17 @@ class LlmAdvisor:
 
     def _resolve_cli_path(self) -> Optional[Path]:
         override = os.environ.get("UBOOT_LLAMACPP_CLI", "").strip()
+        repo_root = Path(__file__).resolve().parent.parent.parent
         candidates = [
             Path(override) if override else None,
             self.installer.runtime_path(),
             self.component_root / "runtime" / "llama-cli.exe",
             self.component_root / "bin" / "llama-completion.exe",
             self.component_root / "bin" / "llama-cli.exe",
-            Path("third_party/llama.cpp/llama-completion.exe"),
-            Path("third_party/llama.cpp/llama-cli.exe"),
-            Path("llama.cpp/build/bin/Release/llama-completion.exe"),
-            Path("llama.cpp/build/bin/Release/llama-cli.exe"),
+            repo_root / "third_party/llama.cpp/llama-completion.exe",
+            repo_root / "third_party/llama.cpp/llama-cli.exe",
+            repo_root / "llama.cpp/build/bin/Release/llama-completion.exe",
+            repo_root / "llama.cpp/build/bin/Release/llama-cli.exe",
         ]
         for candidate in candidates:
             if candidate and candidate.exists():
@@ -712,11 +737,12 @@ class LlmAdvisor:
         profile = self.get_profile(mode)
         env_key = "UBOOT_LLM_BETTER_MODEL"
         override = os.environ.get(env_key, "").strip()
+        repo_root = Path(__file__).resolve().parent.parent.parent
         candidates = [
             Path(override) if override else None,
             self.installer.model_path(mode),
             self.component_root / "models" / profile.model_filename,
-            Path("models") / profile.model_filename,
+            repo_root / "models" / profile.model_filename,
         ]
         for candidate in candidates:
             if candidate and candidate.exists():

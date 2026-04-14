@@ -1,10 +1,13 @@
 """Scoring: applies rules and classifies entries."""
 import json
+import os
 import re
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+
+from app.runtime_paths import app_root
 
 from .scanner import Entry
 
@@ -279,10 +282,19 @@ class Scorer:
     @staticmethod
     def _find_rules() -> Path:
         """Find rules_v1.json in common locations."""
+        override = os.environ.get("UBOOT_RULES_PATH", "").strip()
+        if override:
+            candidate = Path(override)
+            if candidate.exists():
+                return candidate
+
+        root = app_root()
+        repo_root = Path(__file__).resolve().parent.parent.parent
         candidates = [
+            root / "rules" / "rules_v1.json",
+            repo_root / "rules" / "rules_v1.json",
             Path("rules/rules_v1.json"),
             Path.cwd() / "rules" / "rules_v1.json",
-            Path(__file__).parent.parent.parent / "rules" / "rules_v1.json",
         ]
         for path in candidates:
             if path.exists():

@@ -83,3 +83,21 @@
 - [x] Multi-scan / timeline visual
 - [ ] Capacidades online opcionales (VirusTotal, WHOIS — toggle OFF por defecto)
 - [ ] Suite integration: Uboot como módulo con launcher compartido
+
+## Fase 7 — Distribución Windows firmada (setup.exe + AI embebida)
+
+- [x] 7.1 Resolver rutas runtime para ejecución instalada (`Program Files`) en scanner/rules/llm
+- [x] 7.2 Persistir snapshots en ruta de usuario (`LOCALAPPDATA\Uboot\snapshots`) para evitar escritura en Program Files
+- [x] 7.3 Añadir `Help -> Check for Updates...` (manual check only, sin auto-update)
+- [x] 7.4 Crear pipeline de release `scripts/windows/build-release.ps1` (PyInstaller `--onedir` + payload offline AI + compilación Inno Setup)
+- [x] 7.5 Crear instalador Inno Setup `scripts/windows/uboot-installer.iss` (per-machine, Apps & Features, Start Menu, desktop opcional)
+- [x] 7.6 Crear helper de firma de release `scripts/windows/sign-release.ps1` (core + GUI + setup, con timestamp)
+- [x] 7.7 Documentar flujo completo de distribución y firma (`docs/WINDOWS_DISTRIBUTION.md`, README, SIGNING.md)
+- [ ] 7.8 Validación en VM limpia: instalación, Better offline sin descarga, uninstall limpio, firma `Valid` en todos los binarios
+
+## Fase 8 — Elegibilidad OSS para firma gestionada
+
+- [x] 8.1 Crear CI en GitHub Actions para smoke tests + build reproducible de `uboot-core.exe` en Windows
+- [x] 8.2 Agregar validación automática de identidad de release (versión consistente app/CMake/installer + naming `Uboot-Setup-*`)
+- [x] 8.3 Agregar validación automática de visibilidad pública del repositorio en contexto GitHub
+- [x] 8.4 Documentar política OSS de confianza y uso no engañoso (`docs/OSS_TRUST_POLICY.md`)

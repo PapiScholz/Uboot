@@ -19,15 +19,17 @@ At minimum:
 
 For real releases, also sign:
 
-- the GUI package if distributed as a standalone executable
-- the installer (`.msi`, `.exe`, `MSIX`, etc.)
+- the packaged GUI executable (`Uboot.exe`)
+- the final installer (`setup.exe`)
 
 ## Signing helper
 
 This repo includes:
 
 - PowerShell helper: [scripts/windows/sign-file.ps1](../scripts/windows/sign-file.ps1)
+- Release helper: [scripts/windows/sign-release.ps1](../scripts/windows/sign-release.ps1)
 - Optional CMake target: `sign-uboot-core`
+- Installer build flow: [docs/WINDOWS_DISTRIBUTION.md](WINDOWS_DISTRIBUTION.md)
 
 The helper supports either:
 
@@ -102,7 +104,15 @@ Expected:
 ## Recommended release practice
 
 1. Build `uboot-core.exe`
-2. Sign `uboot-core.exe`
-3. Package GUI / installer
-4. Sign the installer too
-5. Verify signatures before distribution
+2. Build GUI payload and `setup.exe` with Inno Setup
+3. Sign `uboot-core.exe`, `Uboot.exe`, and `setup.exe`
+4. Verify signatures before distribution
+
+Example end-to-end signing:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\windows\sign-release.ps1 `
+  -PayloadDir .\build\windows-dist\payload `
+  -InstallerExePath .\build\windows-dist\installer\Uboot-Setup-1.0.0.exe `
+  -CertSha1 "<thumbprint>"
+```

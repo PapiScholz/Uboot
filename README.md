@@ -69,6 +69,19 @@ python -m app.main
 
 ---
 
+## Windows distribution (`setup.exe`)
+
+Uboot release distribution on Windows is installer-first:
+
+- GUI packaged with `PyInstaller --onedir`
+- `setup.exe` generated with Inno Setup (`per-machine`, Program Files)
+- offline AI bundle included in the installer (`llm/runtime` + `llm/models`)
+- release binaries signed with Authenticode + timestamp
+
+See full guide: [docs/WINDOWS_DISTRIBUTION.md](docs/WINDOWS_DISTRIBUTION.md)
+
+---
+
 ## Project layout
 
 ```
@@ -112,6 +125,12 @@ See [ROADMAP.md](ROADMAP.md) for the current implementation plan and progress.
 
 ---
 
+## OSS trust and release policy
+
+Project trust and distribution constraints are documented in [docs/OSS_TRUST_POLICY.md](docs/OSS_TRUST_POLICY.md).
+
+---
+
 ## Windows signing
 
 `uboot-core.exe` is currently a normal Windows executable build artifact.  
@@ -121,6 +140,7 @@ This repo includes:
 
 - optional CMake signing target support
 - PowerShell signing helper at [scripts/windows/sign-file.ps1](scripts/windows/sign-file.ps1)
+- release signing helper at [scripts/windows/sign-release.ps1](scripts/windows/sign-release.ps1)
 - detailed signing notes at [docs/SIGNING.md](docs/SIGNING.md)
 
 Quick validation:
@@ -136,12 +156,13 @@ Get-AuthenticodeSignature .\build-vs18\bin\Release\uboot-core.exe | Format-List 
 `LLM Assistance` can run in `Off` or `Better` mode from the GUI.
 
 - `Off`: heuristic evidence only.
-- `Better`: downloads the shared `llama.cpp` runtime plus the recommended local model on first use.
+- `Better`: uses local `llama.cpp` + Qwen 1.5B Q4_K_M.
 
 Behavior:
 
-- The first time a missing mode is selected, Uboot shows a short hardware/benefit banner and starts the install automatically in background.
-- Downloaded assets are cached under `llm/`.
+- In installer distributions, runtime + model are pre-bundled for offline-first usage.
+- If components are missing, Uboot can still use first-use download as a fallback.
+- Assets are stored under `llm/`.
 - If installation or inference fails, the GUI falls back to heuristic evidence and remains usable.
 
 Current local model choice:

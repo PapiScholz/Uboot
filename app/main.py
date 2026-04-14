@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import json
+import os
 import sys
+import webbrowser
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -56,6 +58,7 @@ from app.orchestrator.scanner import Entry, ScanResult
 from app.orchestrator.scoring import RiskLevel, ScoredEntry
 from app.orchestrator.snapshot import Snapshot, SnapshotDiff, SnapshotEntryChange, SnapshotSummary
 from app.settings import SettingsStore
+from app import __version__ as APP_VERSION
 
 
 @dataclass
@@ -379,6 +382,7 @@ class MainWindow(QMainWindow):
         self.llm_install_mode: Optional[LlmMode] = None
         self.queued_install_mode: Optional[LlmMode] = None
         self.llm_prep_dialog: Optional[LlmPreparationDialog] = None
+        self.releases_url = os.environ.get("UBOOT_RELEASES_URL", "https://github.com/ezesc/Uboot/releases")
 
         self._setup_menu()
         self._setup_toolbar()
@@ -431,6 +435,8 @@ class MainWindow(QMainWindow):
         self._sync_llm_menu_actions()
 
         help_menu = menubar.addMenu("&Help")
+        check_updates_action = help_menu.addAction("Check for &Updates...")
+        check_updates_action.triggered.connect(self._on_check_updates)
         about_action = help_menu.addAction("&About")
         about_action.triggered.connect(self._on_about)
 
@@ -1606,10 +1612,32 @@ Rule Matches ({len(scored_entry.rule_matches)}):
         QMessageBox.about(
             self,
             "About Uboot",
-            "Uboot v1.0\n\n"
+            f"Uboot v{APP_VERSION}\n\n"
             "Autoruns-style analyzer with AI scoring, timeline support, and forensic export.\n"
-            "Built with Python, PySide6, and C++17.",
+            "Built with Python, PySide6, and C++17.\n\n"
+            "Updates are manual in this release.",
         )
+
+    def _on_check_updates(self):
+        message = (
+            f"Current version: {APP_VERSION}\n\n"
+            "This release uses manual update checks only.\n"
+            "Open the releases page to download a newer version?"
+        )
+        confirm = QMessageBox.question(
+            self,
+            "Check for Updates",
+            message,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        try:
+            opened = webbrowser.open(self.releases_url)
+        except Exception as exc:
+            QMessageBox.warning(self, "Check for Updates", f"Could not open URL:\n{exc}")
+            return
+        if not opened:
+            QMessageBox.warning(self, "Check for Updates", f"Could not open URL:\n{self.releases_url}")
 
 
 def main():

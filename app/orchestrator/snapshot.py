@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
+from app.runtime_paths import user_data_dir
+
 from .scanner import Entry, ScanResult
 
 
@@ -56,7 +58,7 @@ class SnapshotManager:
     """Manage snapshot persistence and change detection."""
 
     def __init__(self, snapshot_dir: Optional[Path] = None):
-        self.snapshot_dir = Path(snapshot_dir or "snapshots")
+        self.snapshot_dir = Path(snapshot_dir or (user_data_dir() / "snapshots"))
         self.snapshot_dir.mkdir(exist_ok=True, parents=True)
 
     def save(self, scan_result: ScanResult, label: str = "") -> Snapshot:

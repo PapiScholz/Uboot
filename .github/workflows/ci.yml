@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  policy-and-identity:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate release identity
+        run: python scripts/ci/validate_release_identity.py
+
+      - name: Validate repository visibility
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/ci/validate_repo_public.py
+
+  windows-build-and-smoke:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python test deps
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Run smoke tests
+        shell: pwsh
+        run: python -m pytest tests/smoke_tests.py -q
+
+      - name: Configure CMake
+        shell: pwsh
+        run: cmake -S . -B build-vs17 -G "Visual Studio 17 2022" -A x64
+
+      - name: Build uboot-core (Release)
+        shell: pwsh
+        run: cmake --build build-vs17 --config Release --target uboot-core
+
+      - name: Validate core runtime policy gate
+        shell: pwsh
+        run: .\build-vs17\bin\Release\uboot-core.exe --help

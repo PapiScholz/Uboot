@@ -63,6 +63,55 @@
       },
       "group": "none",
       "problemMatcher": []
+    },
+    {
+      "label": "claude: activate profile",
+      "type": "shell",
+      "command": "powershell",
+      "args": [
+        "-ExecutionPolicy", "Bypass",
+        "-File", "${workspaceFolder}/scripts/windows/claude-profile.ps1",
+        "${input:claudeProfile}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "none",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "claudeProfile",
+      "type": "pickString",
+      "description": "Selecciona el perfil CLAUDE.md a activar:",
+      "options": [
+        {
+          "label": "coding  - Desarrollo, code review, debugging (default)",
+          "value": "coding"
+        },
+        {
+          "label": "agents  - Pipelines de automatizacion, multi-agent",
+          "value": "agents"
+        },
+        {
+          "label": "analysis  - Analisis de datos, investigacion, reportes",
+          "value": "analysis"
+        },
+        {
+          "label": "benchmark  - Benchmarks token-efficiency",
+          "value": "benchmark"
+        },
+        {
+          "label": "v8  - Ultra-lean, maximo ahorro de costo (20 tool calls)",
+          "value": "v8"
+        },
+        {
+          "label": "base  - Universal base",
+          "value": "base"
+        }
+      ],
+      "default": "coding"
     }
   ]
 }

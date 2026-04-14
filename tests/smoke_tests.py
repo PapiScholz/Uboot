@@ -407,7 +407,7 @@ def test_llm_advisor_stabilizes_weak_output():
 
 
 def test_llm_advisor_cache_fingerprint_tracks_payload_and_mode():
-    """Verify cache keys invalidate when payload or mode changes."""
+    """Verify cache keys invalidate when payload changes."""
     print("Testing LLM advisor cache fingerprinting...")
 
     advisor = LlmAdvisor(component_root=Path("tests/fixtures/fake-llm"))
@@ -428,20 +428,18 @@ def test_llm_advisor_cache_fingerprint_tracks_payload_and_mode():
         authenticode={"signed": False, "status": "Unsigned"},
     )
 
-    fast_fingerprint = advisor.cache_fingerprint(entry, scored_entry, evidence, LlmMode.FAST)
     better_fingerprint = advisor.cache_fingerprint(entry, scored_entry, evidence, LlmMode.BETTER)
     entry.metadata["signature_status"] = "Valid"
     rescored_entry = scorer.score([entry])[0]
-    changed_fingerprint = advisor.cache_fingerprint(entry, rescored_entry, evidence, LlmMode.FAST)
+    changed_fingerprint = advisor.cache_fingerprint(entry, rescored_entry, evidence, LlmMode.BETTER)
 
-    assert fast_fingerprint != better_fingerprint
-    assert fast_fingerprint != changed_fingerprint
+    assert better_fingerprint != changed_fingerprint
 
     print("  ✓ Advisory cache fingerprint verified")
 
 
 def test_settings_persistence():
-    """Verify settings persist the global LLM mode and component state."""
+    """Verify settings persist the global LLM mode, component state, and migrations."""
     print("Testing settings persistence...")
 
     with TemporaryDirectory() as temp_dir:
@@ -453,7 +451,6 @@ def test_settings_persistence():
             llm_component_status="installed",
             llm_component_error="",
             llm_installed_runtime_version="b8779",
-            llm_fast_installed=True,
             llm_better_installed=True,
         )
 
@@ -464,14 +461,27 @@ def test_settings_persistence():
         assert loaded.llm_mode_configured is True
         assert loaded.llm_component_status == "installed"
         assert loaded.llm_installed_runtime_version == "b8779"
-        assert loaded.llm_fast_installed is True
         assert loaded.llm_better_installed is True
+
+        settings_path.write_text(
+            json.dumps(
+                {
+                    "llm_mode": "fast",
+                    "llm_mode_configured": True,
+                    "llm_component_status": "installed",
+                    "llm_better_installed": True,
+                }
+            ),
+            encoding="utf-8",
+        )
+        migrated = store.load()
+        assert migrated.llm_mode == "better"
 
     print("  ✓ Settings persistence verified")
 
 
 def test_llm_component_installation_flow():
-    """Verify local AI components install from URLs, persist, and upgrade by mode."""
+    """Verify the single Better-mode local AI component installs and persists."""
     print("Testing local AI component installation flow...")
 
     with TemporaryDirectory() as temp_dir:
@@ -485,19 +495,13 @@ def test_llm_component_installation_flow():
             archive.writestr("llama-bin/llama-cli.exe", "fake-llama-cli")
             archive.writestr("llama-bin/ggml-base.dll", "fake-dll")
 
-        fast_model = downloads_dir / "qwen3-0.6b-q4_k_m.gguf"
-        fast_model.write_text("fast-model", encoding="utf-8")
-        better_model = downloads_dir / "qwen3-1.7b-q4_k_m.gguf"
+        better_model = downloads_dir / "qwen2.5-1.5b-instruct-q4_k_m.gguf"
         better_model.write_text("better-model", encoding="utf-8")
 
         env_updates = {
             "UBOOT_LLAMA_RUNTIME_URL": runtime_zip.resolve().as_uri(),
             "UBOOT_LLAMA_RUNTIME_SHA256": _sha256_file(runtime_zip),
             "UBOOT_LLAMA_RUNTIME_VERSION": "test-runtime",
-            "UBOOT_LLM_FAST_MODEL_URL": fast_model.resolve().as_uri(),
-            "UBOOT_LLM_FAST_MODEL_SHA256": _sha256_file(fast_model),
-            "UBOOT_LLM_FAST_MODEL_VERSION": "test-fast",
-            "UBOOT_LLM_FAST_MODEL_BYTES": str(fast_model.stat().st_size),
             "UBOOT_LLM_BETTER_MODEL_URL": better_model.resolve().as_uri(),
             "UBOOT_LLM_BETTER_MODEL_SHA256": _sha256_file(better_model),
             "UBOOT_LLM_BETTER_MODEL_VERSION": "test-better",
@@ -507,21 +511,13 @@ def test_llm_component_installation_flow():
         os.environ.update(env_updates)
         try:
             advisor = LlmAdvisor(component_root=temp_root / "llm")
-            fast_result = advisor.ensure_component(LlmMode.FAST)
-            fast_status = advisor.component_status(LlmMode.FAST)
-            better_status_before = advisor.component_status(LlmMode.BETTER)
-
-            assert fast_result.runtime_path.exists(), "Runtime was not installed"
-            assert fast_result.model_path.exists(), "Fast model was not installed"
-            assert fast_status["available"] is True
-            assert better_status_before["status"] in {"missing", "partial"}
-            assert (advisor.component_root / "manifest.json").exists(), "Manifest missing"
-
             better_result = advisor.ensure_component(LlmMode.BETTER)
             better_status = advisor.component_status(LlmMode.BETTER)
 
+            assert better_result.runtime_path.exists(), "Runtime was not installed"
             assert better_result.model_path.exists(), "Better model was not installed"
             assert better_status["available"] is True
+            assert (advisor.component_root / "manifest.json").exists(), "Manifest missing"
             assert (advisor.component_root / "runtime" / "ggml-base.dll").exists(), "Runtime DLL missing"
         finally:
             for key, value in previous_values.items():

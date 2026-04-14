@@ -39,7 +39,6 @@ class LlmMode(str, Enum):
     """Global LLM assistance modes."""
 
     OFF = "off"
-    FAST = "fast"
     BETTER = "better"
 
 
@@ -56,6 +55,7 @@ class LlmProfile:
     recommended_ram: str
     download_size: str
     benefit_summary: str
+    context_size: int
     max_output_tokens: int
     timeout_seconds: float
 
@@ -148,25 +148,18 @@ class LlmInstaller:
         )
         self.runtime_sha256 = os.environ.get("UBOOT_LLAMA_RUNTIME_SHA256", "").strip()
         self.model_specs = {
-            LlmMode.FAST: {
-                "filename": "qwen3-0.6b-q4_k_m.gguf",
-                "url": os.environ.get(
-                    "UBOOT_LLM_FAST_MODEL_URL",
-                    "https://huggingface.co/rippertnt/Qwen3-0.6B-Q4_K_M-GGUF/resolve/main/qwen3-0.6b-q4_k_m.gguf?download=true",
-                ),
-                "sha256": os.environ.get("UBOOT_LLM_FAST_MODEL_SHA256", "").strip(),
-                "version": os.environ.get("UBOOT_LLM_FAST_MODEL_VERSION", "Q4_K_M"),
-                "size_bytes": int(os.environ.get("UBOOT_LLM_FAST_MODEL_BYTES", str(484 * 1024 * 1024))),
-            },
             LlmMode.BETTER: {
-                "filename": "qwen3-1.7b-q4_k_m.gguf",
+                "filename": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
                 "url": os.environ.get(
                     "UBOOT_LLM_BETTER_MODEL_URL",
-                    "https://huggingface.co/sabafallah/Qwen3-1.7B-Q4_K_M-GGUF/resolve/main/qwen3-1.7b-q4_k_m.gguf?download=true",
+                    "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf?download=true",
                 ),
-                "sha256": os.environ.get("UBOOT_LLM_BETTER_MODEL_SHA256", "").strip(),
-                "version": os.environ.get("UBOOT_LLM_BETTER_MODEL_VERSION", "Q4_K_M"),
-                "size_bytes": int(os.environ.get("UBOOT_LLM_BETTER_MODEL_BYTES", str(1100 * 1024 * 1024))),
+                "sha256": os.environ.get(
+                    "UBOOT_LLM_BETTER_MODEL_SHA256",
+                    "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e",
+                ).strip(),
+                "version": os.environ.get("UBOOT_LLM_BETTER_MODEL_VERSION", "Q4_K_M_1.5B"),
+                "size_bytes": int(os.environ.get("UBOOT_LLM_BETTER_MODEL_BYTES", str(1120 * 1024 * 1024))),
             },
         }
 
@@ -243,7 +236,7 @@ class LlmInstaller:
         )
 
     def _install_runtime(self, progress: ProgressCallback) -> None:
-        asset = self.required_assets(LlmMode.FAST)[0]
+        asset = self.required_assets(LlmMode.BETTER)[0]
         archive_path = self._download_asset(asset, progress)
         extraction_root = self.cache_dir / f"{asset.asset_id}-{asset.version}.extract"
         if extraction_root.exists():
@@ -361,34 +354,22 @@ class LlmInstaller:
 class LlmAdvisor:
     """Run structured remediation advisory through a local llama.cpp runtime."""
 
-    ADVISOR_OUTPUT_VERSION = "2026-04-13-quality-1"
+    ADVISOR_OUTPUT_VERSION = "2026-04-13-quality-3"
 
     PROFILES: Dict[LlmMode, LlmProfile] = {
-        LlmMode.FAST: LlmProfile(
-            display_name="Fast",
-            description="Lower RAM usage and faster responses.",
-            model_filename="qwen3-0.6b-q4_k_m.gguf",
-            estimated_ram="~0.5-0.8 GB extra RAM",
-            estimated_latency="Faster, more conservative output",
-            minimum_ram="4 GB minimum",
-            recommended_ram="8 GB recommended",
-            download_size="~450 MB first install",
-            benefit_summary="Best for quick explanations on modest hardware.",
-            max_output_tokens=220,
-            timeout_seconds=15.0,
-        ),
         LlmMode.BETTER: LlmProfile(
             display_name="Better",
-            description="Stronger justifications with a higher resource cost.",
-            model_filename="qwen3-1.7b-q4_k_m.gguf",
-            estimated_ram="~0.9-1.3 GB extra RAM",
-            estimated_latency="Slower, stronger recommendations",
-            minimum_ram="8 GB minimum",
-            recommended_ram="8-16 GB recommended",
-            download_size="~1.2 GB first install",
-            benefit_summary="Best for richer remediation justification.",
-            max_output_tokens=256,
-            timeout_seconds=24.0,
+            description="Higher-quality local explanation and remediation advice.",
+            model_filename="qwen2.5-1.5b-instruct-q4_k_m.gguf",
+            estimated_ram="~0.9-1.2 GB extra RAM",
+            estimated_latency="Moderate latency with better narrative quality",
+            minimum_ram="6 GB minimum",
+            recommended_ram="8 GB recommended",
+            download_size="~1.1 GB first install",
+            benefit_summary="Best local balance of hardware efficiency and advisory quality.",
+            context_size=2048,
+            max_output_tokens=320,
+            timeout_seconds=30.0,
         ),
     }
 
@@ -406,6 +387,8 @@ class LlmAdvisor:
         if not value:
             return None
         normalized = str(value).strip().lower()
+        if normalized == "fast":
+            return LlmMode.BETTER
         for mode in LlmMode:
             if mode.value == normalized:
                 return mode
@@ -567,7 +550,7 @@ class LlmAdvisor:
             raise ComponentUnavailableError(status["message"])
 
         payload = self.build_payload(entry, scored_entry, evidence)
-        prompt = self._build_prompt(payload)
+        prompt = self._build_prompt(payload, mode)
         response = self._invoke_llama_cpp(
             prompt=prompt,
             model_path=Path(status["model_path"]),
@@ -727,7 +710,7 @@ class LlmAdvisor:
 
     def _resolve_model_path(self, mode: LlmMode) -> Optional[Path]:
         profile = self.get_profile(mode)
-        env_key = "UBOOT_LLM_FAST_MODEL" if mode == LlmMode.FAST else "UBOOT_LLM_BETTER_MODEL"
+        env_key = "UBOOT_LLM_BETTER_MODEL"
         override = os.environ.get(env_key, "").strip()
         candidates = [
             Path(override) if override else None,
@@ -968,9 +951,11 @@ class LlmAdvisor:
         )
 
     @staticmethod
-    def _build_prompt(payload: Dict[str, Any]) -> str:
-        """Build a short, strict prompt for deterministic JSON output."""
+    def _build_prompt(payload: Dict[str, Any], mode: LlmMode) -> str:
+        """Build a strict prompt for deterministic JSON output."""
         payload_json = json.dumps(payload, separators=(",", ":"), ensure_ascii=True)
+        if mode != LlmMode.BETTER:
+            raise ValueError("Only Better mode supports local advisory prompting")
         return (
             "You are a Windows persistence remediation advisor.\n"
             "Rules:\n"
@@ -988,6 +973,24 @@ class LlmAdvisor:
             "- summary must be one short sentence, max 160 characters.\n"
             "- evidence must contain 1 to 3 short strings, each under 80 characters.\n"
             "- justification must be one short sentence, max 220 characters.\n"
+            "- Treat a lone user_writable_location signal as a weak case unless stronger evidence is also present.\n"
+            "- For weak cases, prefer review_manually or open_location instead of disable.\n"
+            "- For services and scheduled tasks, do not recommend disable unless multiple concrete risk indicators exist.\n"
+            "- Use the source and entry_type to explain the persistence mechanism in natural language.\n"
+            "Reference weak-case output:\n"
+            "{\"summary\":\"This service points to a user-writable path, but the current evidence is still limited enough to require review.\","
+            "\"evidence\":[\"Windows service persistence\",\"Target path is user-writable\"],"
+            "\"assessment\":\"suspicious\",\"recommended_action\":\"review_manually\","
+            "\"secondary_action\":\"open_location\","
+            "\"justification\":\"Manual review is safer because the current record does not justify a destructive action.\","
+            "\"false_positive_risk\":\"medium\",\"confidence\":\"medium\"}\n"
+            "Reference stronger-case output:\n"
+            "{\"summary\":\"This registry autorun points to an unsigned executable in a user-writable path.\","
+            "\"evidence\":[\"Registry autorun persistence\",\"Unsigned target\",\"User-writable path\"],"
+            "\"assessment\":\"malicious\",\"recommended_action\":\"disable\","
+            "\"secondary_action\":\"quarantine_candidate\","
+            "\"justification\":\"Disable is preferred because the persistence is active and the evidence is strong, while delete would be harder to reverse.\","
+            "\"false_positive_risk\":\"low\",\"confidence\":\"high\"}\n"
             "- Return valid JSON only with keys: summary, evidence, assessment, recommended_action, "
             "secondary_action, justification, false_positive_risk, confidence.\n"
             f"Payload: {payload_json}"
@@ -1050,7 +1053,7 @@ class LlmAdvisor:
             "--seed",
             "42",
             "--ctx-size",
-            "1024",
+            str(profile.context_size),
             "--no-warmup",
             "--simple-io",
             "--no-display-prompt",

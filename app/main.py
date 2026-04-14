@@ -162,16 +162,10 @@ class LlmModeDialog(QDialog):
         intro.setWordWrap(True)
         layout.addWidget(intro)
 
-        fast_profile = advisor.get_profile(LlmMode.FAST)
         better_profile = advisor.get_profile(LlmMode.BETTER)
         info = QLabel(
             "Off\n"
             "Solo heurística local, sin asistencia LLM.\n\n"
-            "Fast\n"
-            f"{fast_profile.benefit_summary}\n"
-            f"Hardware: {fast_profile.minimum_ram} / {fast_profile.recommended_ram}\n"
-            f"Impact: {fast_profile.estimated_ram} | {fast_profile.estimated_latency}\n"
-            f"Download: {fast_profile.download_size}\n\n"
             "Better\n"
             f"{better_profile.benefit_summary}\n"
             f"Hardware: {better_profile.minimum_ram} / {better_profile.recommended_ram}\n"
@@ -184,10 +178,9 @@ class LlmModeDialog(QDialog):
 
         self.button_group = QButtonGroup(self)
         self.off_radio = QRadioButton("Off")
-        self.fast_radio = QRadioButton("Fast")
         self.better_radio = QRadioButton("Better")
         self.off_radio.setChecked(True)
-        for radio in (self.off_radio, self.fast_radio, self.better_radio):
+        for radio in (self.off_radio, self.better_radio):
             self.button_group.addButton(radio)
             layout.addWidget(radio)
 
@@ -203,8 +196,6 @@ class LlmModeDialog(QDialog):
 
     def selected_mode(self) -> LlmMode:
         """Return the chosen LLM mode."""
-        if self.fast_radio.isChecked():
-            return LlmMode.FAST
         if self.better_radio.isChecked():
             return LlmMode.BETTER
         return LlmMode.OFF
@@ -427,7 +418,7 @@ class MainWindow(QMainWindow):
         self.llm_action_group = QActionGroup(self)
         self.llm_action_group.setExclusive(True)
         self.llm_actions = {}
-        for label, mode in (("Off", LlmMode.OFF), ("Fast", LlmMode.FAST), ("Better", LlmMode.BETTER)):
+        for label, mode in (("Off", LlmMode.OFF), ("Better", LlmMode.BETTER)):
             action = llm_menu.addAction(label)
             action.setCheckable(True)
             action.triggered.connect(
@@ -585,11 +576,9 @@ class MainWindow(QMainWindow):
         self.settings_store.save(self.app_settings)
 
     def _sync_llm_component_settings(self):
-        fast_status = self.llm_advisor.component_status(LlmMode.FAST)
         better_status = self.llm_advisor.component_status(LlmMode.BETTER)
-        self.app_settings.llm_fast_installed = bool(fast_status["model_installed"])
         self.app_settings.llm_better_installed = bool(better_status["model_installed"])
-        runtime_ready = bool(fast_status["runtime_installed"] or better_status["runtime_installed"])
+        runtime_ready = bool(better_status["runtime_installed"])
         self.app_settings.llm_installed_runtime_version = (
             self.llm_advisor.installer.runtime_version if runtime_ready else ""
         )
@@ -1516,7 +1505,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
             entry = scored_entry.entry
             evidence = self.evidence_cache.get(entry.entry_id)
             advice = None
-            for mode in (LlmMode.BETTER, LlmMode.FAST):
+            for mode in (LlmMode.BETTER,):
                 advice = self._get_cached_advice(scored_entry, evidence, mode)
                 if advice:
                     break

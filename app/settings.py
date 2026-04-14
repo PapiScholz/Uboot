@@ -17,7 +17,6 @@ class AppSettings:
     llm_component_status: str = "unknown"
     llm_component_error: str = ""
     llm_installed_runtime_version: str = ""
-    llm_fast_installed: bool = False
     llm_better_installed: bool = False
 
 
@@ -50,13 +49,17 @@ class SettingsStore:
         except (json.JSONDecodeError, OSError):
             return AppSettings()
 
+        raw_mode = data.get("llm_mode")
+        normalized_mode = str(raw_mode).strip().lower() if raw_mode is not None else None
+        if normalized_mode == "fast":
+            normalized_mode = "better"
+
         return AppSettings(
-            llm_mode=data.get("llm_mode"),
+            llm_mode=normalized_mode,
             llm_mode_configured=bool(data.get("llm_mode_configured", False)),
             llm_component_status=str(data.get("llm_component_status", "unknown")),
             llm_component_error=str(data.get("llm_component_error", "")),
             llm_installed_runtime_version=str(data.get("llm_installed_runtime_version", "")),
-            llm_fast_installed=bool(data.get("llm_fast_installed", False)),
             llm_better_installed=bool(data.get("llm_better_installed", False)),
         )
 

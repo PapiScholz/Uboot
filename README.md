@@ -113,11 +113,10 @@ See [ROADMAP.md](ROADMAP.md) for the current implementation plan and progress.
 
 ## Optional local AI component
 
-`LLM Assistance` can run in `Off`, `Fast`, or `Better` mode from the GUI.
+`LLM Assistance` can run in `Off` or `Better` mode from the GUI.
 
 - `Off`: heuristic evidence only.
-- `Fast`: downloads the shared `llama.cpp` runtime plus the smaller local model on first use.
-- `Better`: reuses the same runtime and downloads the larger local model for stronger remediation justification.
+- `Better`: downloads the shared `llama.cpp` runtime plus the recommended local model on first use.
 
 Behavior:
 
@@ -125,12 +124,16 @@ Behavior:
 - Downloaded assets are cached under `llm/`.
 - If installation or inference fails, the GUI falls back to heuristic evidence and remains usable.
 
+Current local model choice:
+
+- `Better` uses `Qwen/Qwen2.5-1.5B-Instruct-GGUF` in `Q4_K_M`.
+- Target hardware is `6 GB minimum / 8 GB recommended`.
+- `Fast` was removed because its smaller model did not meet the quality bar for remediation guidance.
+
 Advanced overrides for development/testing are available through environment variables:
 
 - `UBOOT_LLAMA_RUNTIME_URL`
 - `UBOOT_LLAMA_RUNTIME_SHA256`
-- `UBOOT_LLM_FAST_MODEL_URL`
-- `UBOOT_LLM_FAST_MODEL_SHA256`
 - `UBOOT_LLM_BETTER_MODEL_URL`
 - `UBOOT_LLM_BETTER_MODEL_SHA256`
 

@@ -21,6 +21,7 @@ The project is not intended to provide stealth, evasion, payload delivery, persi
 - CI validates version and branding consistency.
 - CI validates repository visibility (public) in GitHub context.
 - CI runs smoke tests and builds `uboot-core.exe` on Windows.
+- Release workflow builds deterministic payload + installer artifacts from tags.
 
 ## Non-deceptive behavior
 

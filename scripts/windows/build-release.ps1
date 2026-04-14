@@ -10,9 +10,15 @@ param(
 $ErrorActionPreference = "Stop"
 
 function Resolve-IsccPath {
+    $override = $env:UBOOT_ISCC_PATH
+    if (-not [string]::IsNullOrWhiteSpace($override) -and (Test-Path -LiteralPath $override)) {
+        return (Resolve-Path -LiteralPath $override).Path
+    }
+
     $candidates = @(
         "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe",
-        "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+        "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+        "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
     )
     foreach ($candidate in $candidates) {
         if ($candidate -and (Test-Path -LiteralPath $candidate)) {

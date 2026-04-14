@@ -7,54 +7,71 @@ on:
     branches: ["**"]
 
 jobs:
-  policy-and-identity:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Validate release identity
-        run: python scripts/ci/validate_release_identity.py
-
-      - name: Validate repository visibility
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python scripts/ci/validate_repo_public.py
-
-  windows-build-and-smoke:
+  windows-ci:
     runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.12
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install Python test deps
+      - name: Install Python dependencies
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
           python -m pip install pytest
 
+      - name: Run OSS and release identity checks
+        shell: pwsh
+        run: |
+          python scripts/ci/check-version-consistency.py
+          python scripts/ci/check-release-naming.py
+          python scripts/ci/check-public-repo.py
+
       - name: Run smoke tests
         shell: pwsh
-        run: python -m pytest tests/smoke_tests.py -q
+        run: |
+          python -m pytest tests/smoke_tests.py -q 2>&1 | Tee-Object -FilePath smoke-tests.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Configure CMake
+      - name: Configure CMake (VS 2022 x64)
         shell: pwsh
-        run: cmake -S . -B build-vs17 -G "Visual Studio 17 2022" -A x64
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 2>&1 | Tee-Object -FilePath cmake-configure.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build uboot-core (Release)
         shell: pwsh
-        run: cmake --build build-vs17 --config Release --target uboot-core
+        run: |
+          cmake --build build --config Release --target uboot-core 2>&1 | Tee-Object -FilePath cmake-build.log
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Validate built core exists
+        shell: pwsh
+        run: |
+          if (-not (Test-Path .\build\bin\Release\uboot-core.exe)) {
+            throw "Expected core binary not found: build/bin/Release/uboot-core.exe"
+          }
 
       - name: Validate core runtime policy gate
         shell: pwsh
-        run: .\build-vs17\bin\Release\uboot-core.exe --help
+        run: .\build\bin\Release\uboot-core.exe --help
+
+      - name: Upload core artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: uboot-core-windows
+          path: build/bin/Release/uboot-core.exe
+
+      - name: Upload CI logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs-windows
+          path: |
+            smoke-tests.log
+            cmake-configure.log
+            cmake-build.log

@@ -41,6 +41,11 @@ Outputs (default):
 - payload folder: `build/windows-dist/payload`
 - installer folder: `build/windows-dist/installer`
 
+Script notes:
+
+- `build-release.ps1` accepts `UBOOT_PYTHON` to force interpreter selection.
+- `build-release.ps1` accepts `UBOOT_ISCC_PATH` to force `ISCC.exe` path resolution.
+
 ## Sign artifacts
 
 Sign all release-critical binaries with timestamp:
@@ -88,6 +93,15 @@ Expected status: `Valid` for all.
 - No auto-updater.
 - `Help -> Check for Updates...` shows current version and opens release URL.
 - Release URL can be overridden with `UBOOT_RELEASES_URL`.
+
+## GitHub Actions release build
+
+Workflow: `.github/workflows/release.yml`
+
+- Trigger: tags `v*` or manual dispatch.
+- Produces unsigned `payload` and `Uboot-Setup-<version>.exe` artifacts.
+- Default mode runs `build-release.ps1` with `-SkipAiComponent` unless `include_ai_component=true` and assets exist in workspace.
+- Signing remains a post-build release gate.
 
 ## SmartScreen / WDAC notes
 

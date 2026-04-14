@@ -30,6 +30,7 @@ This repo includes:
 - Release helper: [scripts/windows/sign-release.ps1](../scripts/windows/sign-release.ps1)
 - Optional CMake target: `sign-uboot-core`
 - Installer build flow: [docs/WINDOWS_DISTRIBUTION.md](WINDOWS_DISTRIBUTION.md)
+- CI release artifact workflow: `.github/workflows/release.yml` (unsigned artifacts)
 
 The helper supports either:
 
@@ -107,6 +108,8 @@ Expected:
 2. Build GUI payload and `setup.exe` with Inno Setup
 3. Sign `uboot-core.exe`, `Uboot.exe`, and `setup.exe`
 4. Verify signatures before distribution
+
+Note: CI currently builds and publishes unsigned release artifacts. Signing remains a required release gate outside CI credentials in this phase.
 
 Example end-to-end signing:
 

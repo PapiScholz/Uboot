@@ -1,0 +1,84 @@
+name: Release Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      include_ai_component:
+        description: "Include bundled local AI assets (requires llm/runtime + llm/models in workspace)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  build-release-artifacts:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller PySide6 pytest
+
+      - name: Run release identity checks
+        shell: pwsh
+        run: |
+          python scripts/ci/check-version-consistency.py
+          python scripts/ci/check-release-naming.py
+
+      - name: Build core (Release)
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64
+          cmake --build build --config Release --target uboot-core
+
+      - name: Build release payload and installer
+        shell: pwsh
+        run: |
+          $args = @(
+            "-ExecutionPolicy", "Bypass",
+            "-File", ".\scripts\windows\build-release.ps1",
+            "-CoreExePath", ".\build\bin\Release\uboot-core.exe"
+          )
+          if ("${{ github.event.inputs.include_ai_component }}" -eq "true") {
+            if ((Test-Path .\llm\runtime) -and (Test-Path .\llm\models\qwen2.5-1.5b-instruct-q4_k_m.gguf)) {
+              Write-Host "Including local AI component in release build."
+            } else {
+              Write-Host "Requested include_ai_component=true but required AI assets are missing. Falling back to -SkipAiComponent."
+              $args += "-SkipAiComponent"
+            }
+          } else {
+            $args += "-SkipAiComponent"
+          }
+          powershell @args
+
+      - name: Upload payload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-payload
+          path: build/windows-dist/payload
+
+      - name: Upload installer artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-installer
+          path: build/windows-dist/installer/Uboot-Setup-*.exe

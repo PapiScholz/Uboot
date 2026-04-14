@@ -71,7 +71,7 @@
 - [x] 5.1 `tests/fixtures/`: JSONs de entradas clean, suspicious, malicious + fixtures.py
 - [x] 5.2 Smoke tests Python: scanner + scoring verifican estructura de output (4/4 pasos ✓)
 - [x] 5.3 Smoke test diffs: snapshot diff detection verificado
-- [ ] 5.4 (opcional) GitHub Actions: cmake build + smoke tests en cada push
+- [x] 5.4 GitHub Actions CI: checks + smoke tests + build CMake en Windows
 
 ## Fase 6 — Post-V1
 
@@ -101,3 +101,5 @@
 - [x] 8.2 Agregar validación automática de identidad de release (versión consistente app/CMake/installer + naming `Uboot-Setup-*`)
 - [x] 8.3 Agregar validación automática de visibilidad pública del repositorio en contexto GitHub
 - [x] 8.4 Documentar política OSS de confianza y uso no engañoso (`docs/OSS_TRUST_POLICY.md`)
+- [x] 8.5 Crear workflow de release reproducible (build+artifacts, sin firma automática en CI)
+- [ ] 8.6 Integrar firma gestionada (SignPath o equivalente) cuando existan credenciales de org/proyecto

@@ -125,6 +125,21 @@ See [ROADMAP.md](ROADMAP.md) for the current implementation plan and progress.
 
 ---
 
+## CI and release automation
+
+- CI workflow: `.github/workflows/ci.yml`
+  - runs on `windows-latest`
+  - executes release identity/public visibility checks
+  - runs smoke tests
+  - configures and builds `uboot-core.exe` with CMake
+  - uploads `uboot-core.exe` and CI logs as artifacts
+- Release build workflow: `.github/workflows/release.yml`
+  - runs on tags `v*` or manual dispatch
+  - builds payload + installer with `scripts/windows/build-release.ps1`
+  - uploads unsigned release artifacts for signing/distribution handoff
+
+---
+
 ## OSS trust and release policy
 
 Project trust and distribution constraints are documented in [docs/OSS_TRUST_POLICY.md](docs/OSS_TRUST_POLICY.md).

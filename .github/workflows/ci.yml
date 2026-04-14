@@ -58,7 +58,20 @@ jobs:
 
       - name: Validate core runtime policy gate
         shell: pwsh
-        run: .\build\bin\Release\uboot-core.exe --help
+        run: |
+          $runtimeGateOutput = "core-runtime-gate.json"
+          .\build\bin\Release\uboot-core.exe | Out-File -LiteralPath $runtimeGateOutput -Encoding utf8
+          if ($LASTEXITCODE -ne 0) {
+            throw "Runtime policy gate failed with exit code $LASTEXITCODE"
+          }
+
+          $gateJson = Get-Content -LiteralPath $runtimeGateOutput -Raw | ConvertFrom-Json
+          if ($null -eq $gateJson.entries) {
+            throw "Runtime policy gate output is missing 'entries'."
+          }
+          if ($null -eq $gateJson.schemaVersion -and $null -eq $gateJson.schema_version) {
+            throw "Runtime policy gate output is missing 'schemaVersion'/'schema_version'."
+          }
 
       - name: Upload core artifact
         uses: actions/upload-artifact@v4
@@ -75,3 +88,4 @@ jobs:
             smoke-tests.log
             cmake-configure.log
             cmake-build.log
+            core-runtime-gate.json

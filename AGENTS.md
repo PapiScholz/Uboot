@@ -17,7 +17,7 @@
 
 ## Execution Checklist for This Repo
 
-- Validate runtime policy first: before deep debugging, run `build-vs18/bin/Release/uboot-core.exe --help` (or equivalent) to detect App Control/WDAC blocking early.
+- Validate runtime policy first: before deep debugging, run `build-vs18/bin/Release/uboot-core.exe` (no `--help`) to detect App Control/WDAC blocking early.
 - For remediation CLI, remember argparse global options must go before subcommand: `... --pretty plan ...` not `... plan ... --pretty`.
 - Use the correct core binary path after CMake build: `build-vs18/bin/Release/uboot-core.exe`.
 - Keep VS Code tasks aligned with local toolchain: use `build-vs18` for CMake and PowerShell-safe Python task commands with `.venv` fallback.

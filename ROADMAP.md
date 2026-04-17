@@ -47,7 +47,7 @@
 
 - [x] 3.1 Scaffold del paquete Python (`app/orchestrator/`)
 - [x] 3.2 `scanner.py`: invoca uboot-core.exe, parsea JSON de entradas
-- [x] 3.3 `evidence.py`: invoca uboot-core.exe evidence por entry-id
+- [x] 3.3 `evidence.py`: recopila evidencia forense via PowerShell (Get-AuthenticodeSignature, Get-FileHash) — modulo C++ evidence archivado en docs/archive/evidence_wip/
 - [x] 3.4 `scoring.py`: carga rules_v1.json, produce score + classification + signals + explanation
 - [x] 3.5 `remediation.py`: construye plan TX, invoca tx plan/apply/undo
 - [x] 3.6 `snapshot.py`: persiste scans, diff entre sesiones (new / changed / removed)

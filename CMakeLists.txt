@@ -53,7 +53,6 @@ set(SOURCES
     core/tx/Transaction.cpp
     core/backup/BackupStore.cpp
     core/hardening/CriticalList.cpp
-    core/hardening/PolicyInspector.cpp
     core/hardening/SecurityLog.cpp
     core/hardening/DependencyAnalyzer.cpp
     core/ops/RegistryRenameValueOp.cpp

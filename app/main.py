@@ -1343,7 +1343,7 @@ Rule Matches ({len(scored_entry.rule_matches)}):
 
         try:
             plan = self.remediator.plan(
-                [scored_entry.entry.entry_id],
+                [scored_entry.entry],
                 reason=reason or "User-initiated remediation",
             )
         except Exception as exc:

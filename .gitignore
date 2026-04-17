@@ -50,6 +50,7 @@ dist/
 *.tmp
 *~
 elevated_smoke_result.json
+skills/
 snapshots/
 tests/fixtures/snapshots/
 llm/runtime/

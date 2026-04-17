@@ -23,6 +23,7 @@ public:
 
   // Action flags
   std::vector<std::string> targetIds; // --ids
+  std::vector<std::string> opSpecs;   // --op-spec "type|location|key|action" (repeatable)
   bool disableAction = false;         // --disable
   bool enableAction = false;          // --enable
 

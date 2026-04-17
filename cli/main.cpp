@@ -5,6 +5,9 @@
 #include "../core/tx/Transaction.h"
 #include "../core/runner/CollectorRunner.h"
 #include "../core/util/CliArgs.h"
+#include "../core/ops/RegistryRenameValueOp.h"
+#include "../core/ops/ServiceStartTypeOp.h"
+#include "../core/ops/TaskToggleEnabledOp.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
@@ -12,6 +15,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 #include <windows.h>
@@ -195,25 +199,64 @@ int main(int argc, char *argv[]) {
             config.safeMode = args.safeMode;
             tx.setConfig(config);
 
-            bool planned = tx.plan();
+            // Build operations from --op-spec args: "type|location|key|action"
+            for (const auto &spec : args.opSpecs) {
+                std::vector<std::string> parts;
+                std::stringstream ss(spec);
+                std::string token;
+                while (std::getline(ss, token, '|')) {
+                    parts.push_back(token);
+                }
+                if (parts.size() < 4) continue;
 
-            rapidjson::Document doc;
-            doc.SetObject();
-            auto &alloc = doc.GetAllocator();
+                const std::string &type   = parts[0];
+                const std::string &loc    = parts[1];
+                const std::string &key    = parts[2];
+                bool disable = (parts[3] != "enable");
 
-            std::string txId = tx.getId();
-            doc.AddMember("tx_id", rapidjson::Value(txId.c_str(), alloc), alloc);
-
-            rapidjson::Value entryIds(rapidjson::kArrayType);
-            for (const std::string &id : args.targetIds) {
-                entryIds.PushBack(rapidjson::Value(id.c_str(), alloc), alloc);
+                if (type == "Services") {
+                    auto op = std::make_unique<uboot::ops::ServiceStartTypeOp>(
+                        key,
+                        disable ? uboot::ops::ServiceStartTypeOp::Action::Disable
+                                : uboot::ops::ServiceStartTypeOp::Action::Enable);
+                    tx.addOperation(std::move(op));
+                } else if (type == "ScheduledTasks") {
+                    auto op = std::make_unique<uboot::ops::TaskToggleEnabledOp>(
+                        loc,
+                        disable ? uboot::ops::TaskToggleEnabledOp::Action::Disable
+                                : uboot::ops::TaskToggleEnabledOp::Action::Enable);
+                    tx.addOperation(std::move(op));
+                } else {
+                    // RunRegistry, Winlogon, IfeoDebugger, WmiPersistence, etc.
+                    auto op = std::make_unique<uboot::ops::RegistryRenameValueOp>(
+                        loc, key,
+                        disable ? uboot::ops::RegistryRenameValueOp::Action::Disable
+                                : uboot::ops::RegistryRenameValueOp::Action::Enable);
+                    tx.addOperation(std::move(op));
+                }
             }
-            doc.AddMember("entry_ids", entryIds, alloc);
-            doc.AddMember("reason", rapidjson::Value(args.reason.c_str(), alloc), alloc);
-            doc.AddMember("executed", false, alloc);
 
-            rapidjson::Value operations(rapidjson::kArrayType);
-            doc.AddMember("operations", operations, alloc);
+            bool planned = tx.plan();
+            std::string txId = tx.getId();
+
+            // Return the manifest that writeManifest() serialized (contains operations)
+            rapidjson::Document doc;
+            std::string txManifestPath = store.getTransactionDirectory(txId);
+            std::filesystem::path manifestFile =
+                std::filesystem::path(txManifestPath) / "manifest.json";
+            if (!LoadManifestDocument(manifestFile.string(), doc)) {
+                doc.SetObject();
+                auto &alloc = doc.GetAllocator();
+                doc.AddMember("tx_id", rapidjson::Value(txId.c_str(), alloc), alloc);
+                rapidjson::Value entryIds(rapidjson::kArrayType);
+                for (const std::string &id : args.targetIds)
+                    entryIds.PushBack(rapidjson::Value(id.c_str(), alloc), alloc);
+                doc.AddMember("entry_ids", entryIds, alloc);
+                doc.AddMember("reason", rapidjson::Value(args.reason.c_str(), alloc), alloc);
+                doc.AddMember("executed", false, alloc);
+                rapidjson::Value ops(rapidjson::kArrayType);
+                doc.AddMember("operations", ops, alloc);
+            }
 
             WriteJsonDocument(doc, args.prettyPrint);
             return planned ? 0 : 1;

@@ -33,19 +33,16 @@ class ScoredEntry:
 class Scorer:
     """Applies heuristic rules and produces scoring."""
 
-    # Default thresholds for risk classification
-    THRESHOLD_CLEAN = 30
-    THRESHOLD_SUSPICIOUS = 70
-
     def __init__(self, rules_path: Optional[Path] = None):
         """
         Initialize scorer.
-        
+
         Args:
             rules_path: Path to rules_v1.json. If None, searches common locations.
         """
         self.rules_path = rules_path or self._find_rules()
         self.rules_config = self._load_rules()
+        self.threshold_clean, self.threshold_suspicious = self._load_thresholds()
         self.rules = self.rules_config.get("rules", [])
         self.signal_weights = {
             signal.get("id", ""): int(signal.get("weight", 0))
@@ -57,6 +54,14 @@ class Scorer:
             for item in self.rules_config.get("lolbins", [])
             if isinstance(item, str)
         }
+
+    def _load_thresholds(self) -> tuple:
+        thresholds = {t["label"]: t["min_score"]
+                      for t in self.rules_config.get("thresholds", [])
+                      if "label" in t and "min_score" in t}
+        clean = int(thresholds.get("Warning", 30))
+        suspicious = int(thresholds.get("High Risk", 70))
+        return clean, suspicious
 
     def score(self, entries: List[Entry]) -> List[ScoredEntry]:
         """
@@ -95,14 +100,14 @@ class Scorer:
         score = max(0, min(score, 100))
 
         # Determine risk level
-        if score <= self.THRESHOLD_CLEAN:
+        if score <= self.threshold_clean:
             risk_level = RiskLevel.CLEAN
-        elif score < self.THRESHOLD_SUSPICIOUS:
+        elif score < self.threshold_suspicious:
             risk_level = RiskLevel.SUSPICIOUS
         else:
             risk_level = RiskLevel.MALICIOUS
 
-        explanation = self._generate_explanation(entry, score, rule_matches)
+        explanation = self._generate_explanation(entry, score, rule_matches, self.threshold_clean, self.threshold_suspicious)
 
         return ScoredEntry(
             entry=entry,
@@ -261,13 +266,14 @@ class Scorer:
         return not has_dir_separator
 
     @staticmethod
-    def _generate_explanation(entry: Entry, score: int, rule_matches: List[str]) -> str:
+    def _generate_explanation(entry: Entry, score: int, rule_matches: List[str],
+                              threshold_clean: int = 30, threshold_suspicious: int = 70) -> str:
         """Generate human-readable explanation of score."""
         parts = []
-        
-        if score <= Scorer.THRESHOLD_CLEAN:
+
+        if score <= threshold_clean:
             parts.append(f"Clean ({score}): ")
-        elif score < Scorer.THRESHOLD_SUSPICIOUS:
+        elif score < threshold_suspicious:
             parts.append(f"Suspicious ({score}): ")
         else:
             parts.append(f"Malicious ({score}): ")

@@ -110,6 +110,13 @@ CliArgs CliArgs::Parse(int argc, char *argv[]) {
       args.bulkConfirm = true;
     } else if (arg == "--safe-mode") {
       args.safeMode = true;
+    } else if (arg == "--op-spec") {
+      if (i + 1 < argc) {
+        args.opSpecs.push_back(argv[++i]);
+      } else {
+        args.errorMessage = "--op-spec requires a value (type|location|key|action)";
+        return args;
+      }
     } else if (arg == "--backup-dir") {
       if (i + 1 < argc)
         i++;
@@ -136,9 +143,9 @@ CliArgs CliArgs::Parse(int argc, char *argv[]) {
       args.errorMessage = "apply action requires --tx-id <id>";
       return args;
     }
-    if (args.subCommand == "plan" && args.targetIds.empty()) {
+    if (args.subCommand == "plan" && args.targetIds.empty() && args.opSpecs.empty()) {
       args.errorMessage =
-          "plan action requires --entry-id <id> or --entry-ids <id1,id2,...>";
+          "plan action requires --entry-id/--entry-ids or --op-spec";
       return args;
     }
   }

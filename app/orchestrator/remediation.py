@@ -57,28 +57,46 @@ class Remediation:
         """
         self.uboot_core_exe = uboot_core_exe or Path("uboot-core.exe")
 
+    # Sources that map to registry-rename operations
+    _REGISTRY_SOURCES = frozenset({"RunRegistry", "Winlogon", "IfeoDebugger", "WmiPersistence"})
+    # Sources supported by C++ tx operations
+    _SUPPORTED_SOURCES = _REGISTRY_SOURCES | {"Services", "ScheduledTasks"}
+
     def plan(
         self,
-        entry_ids: List[str],
+        entries: List[Any],
         reason: str = "User-initiated remediation",
         timeout: int = 60
     ) -> TransactionPlan:
         """
         Create a remediation plan (dry-run).
-        
+
         Args:
-            entry_ids: List of entry IDs to remediate
+            entries: Objects with .entry_id, .source, .location, .key attributes
             reason: Description of remediation reason
             timeout: subprocess timeout in seconds
-            
+
         Returns:
             TransactionPlan with operations to apply
         """
+        entry_ids = [getattr(e, "entry_id", "") for e in entries]
+
+        op_specs = []
+        for e in entries:
+            src = getattr(e, "source", "") or ""
+            meta = getattr(e, "metadata", {}) or {}
+            loc = (meta.get("location", "") or "").replace("|", "/")
+            key = (meta.get("key", "") or "").replace("|", "/")
+            if src in self._SUPPORTED_SOURCES:
+                op_specs.append(f"{src}|{loc}|{key}|disable")
+
         cmd = [
             str(self.uboot_core_exe), "tx", "plan",
             "--entry-ids", ",".join(entry_ids),
-            "--reason", reason
+            "--reason", reason,
         ]
+        for spec in op_specs:
+            cmd += ["--op-spec", spec]
 
         result = subprocess.run(
             cmd,
@@ -282,6 +300,14 @@ def _parse_entry_ids(single_ids: List[str], csv_ids: str) -> List[str]:
     return entry_ids
 
 
+class _EntryStub:
+    """Minimal entry object for CLI usage where only the ID is known."""
+    def __init__(self, entry_id: str) -> None:
+        self.entry_id = entry_id
+        self.source = ""
+        self.metadata: Dict[str, Any] = {}
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
@@ -295,7 +321,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 parser.error("plan requires at least one --entry-id or --entry-ids value")
 
             plan = remediator.plan(
-                entry_ids=entry_ids,
+                entries=[_EntryStub(eid) for eid in entry_ids],
                 reason=args.reason,
                 timeout=args.timeout,
             )
